@@ -1,11 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import Navbar from "./components/Navbar";
+import Navbar from "./components/navbar";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Products from "./pages/Product";
-import Admin from "./pages/Admin";
-import OrderForm from "./pages/OrderForm";
-import Register from "./pages/Register";
+import Admin from "./pages/admin";
+import OrderForm from "./pages/orderForm";
+import Register from "./pages/register";
 import { useState, useEffect } from "react";
 
 // ✅ Route protection wrappers
