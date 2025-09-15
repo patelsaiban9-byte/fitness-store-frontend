@@ -155,7 +155,7 @@ function Admin() {
           <img
             src={`http://localhost:5000${form.image}`}
             alt="preview"
-            className="h-20 mt-2 rounded"
+            className="h-16 w-16 mt-2 rounded object-cover border"
           />
         )}
         <button
@@ -189,7 +189,7 @@ function Admin() {
                   <img
                     src={`http://localhost:5000${p.image}`}
                     alt={p.name}
-                    className="h-12 mx-auto rounded object-cover"
+                    className="h-16 w-16 mx-auto rounded object-cover border"
                   />
                 )}
               </td>
