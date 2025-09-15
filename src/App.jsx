@@ -1,10 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Navbar from "./components/navbar";
-import Login from "./pages/Login";
-import Home from "./pages/Home";
-import Products from "./pages/Product";
+import Login from "./pages/login";
+import Home from "./pages/home";
+import Products from "./pages/product";
 import Admin from "./pages/admin";
-import OrderForm from "./pages/orderForm";
+import OrderForm from "./pages/orderform";
 import Register from "./pages/register";
 import { useState, useEffect } from "react";
 
