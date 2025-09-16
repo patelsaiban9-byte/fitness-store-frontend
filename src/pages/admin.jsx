@@ -10,10 +10,14 @@ function Admin() {
   });
   const [editingId, setEditingId] = useState(null);
 
+  // ✅ Use backend URL
+  const API_URL =
+    process.env.REACT_APP_API_URL || "https://fitness-store-backend.onrender.com";
+
   // ✅ Fetch products
   const fetchProducts = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/products");
+      const res = await fetch(`${API_URL}/api/products`);
       const data = await res.json();
       setProducts(data);
     } catch (error) {
@@ -39,7 +43,7 @@ function Admin() {
     formData.append("image", file);
 
     try {
-      const res = await fetch("http://localhost:5000/api/upload", {
+      const res = await fetch(`${API_URL}/api/upload`, {
         method: "POST",
         body: formData,
       });
@@ -60,7 +64,7 @@ function Admin() {
     e.preventDefault();
     try {
       if (editingId) {
-        const res = await fetch(`http://localhost:5000/api/products/${editingId}`, {
+        const res = await fetch(`${API_URL}/api/products/${editingId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
@@ -69,7 +73,7 @@ function Admin() {
           alert("Product updated successfully!");
         }
       } else {
-        const res = await fetch("http://localhost:5000/api/products", {
+        const res = await fetch(`${API_URL}/api/products`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
@@ -89,7 +93,7 @@ function Admin() {
   // ✅ Delete product
   const handleDelete = async (id) => {
     try {
-      await fetch(`http://localhost:5000/api/products/${id}`, { method: "DELETE" });
+      await fetch(`${API_URL}/api/products/${id}`, { method: "DELETE" });
       alert("Product deleted!");
       fetchProducts();
     } catch (error) {
@@ -153,7 +157,7 @@ function Admin() {
         />
         {form.image && (
           <img
-            src={`http://localhost:5000${form.image}`}
+            src={`${API_URL}${form.image}`}
             alt="preview"
             className="h-16 w-16 mt-2 rounded object-cover border"
           />
@@ -187,7 +191,7 @@ function Admin() {
               <td className="border px-4 py-2">
                 {p.image && (
                   <img
-                    src={`http://localhost:5000${p.image}`}
+                    src={`${API_URL}${p.image}`}
                     alt={p.name}
                     className="h-16 w-16 mx-auto rounded object-cover border"
                   />

@@ -6,10 +6,14 @@ function Product() {
   const navigate = useNavigate();
   const userRole = localStorage.getItem("role"); // ✅ get role
 
+  // ✅ Use backend URL (works on phone + laptop)
+  const API_URL =
+    process.env.REACT_APP_API_URL || "https://fitness-store-backend.onrender.com";
+
   // Fetch products from backend
   const fetchProducts = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/products");
+      const res = await fetch(`${API_URL}/api/products`);
       const data = await res.json();
       setProducts(data);
     } catch (err) {
@@ -35,10 +39,10 @@ function Product() {
               textAlign: "center",
             }}
           >
-            {/* ✅ Show product image */}
+            {/* ✅ Show product image from backend */}
             {product.image && (
               <img
-                src={`http://localhost:5000${product.image}`}
+                src={`${API_URL}${product.image}`}
                 alt={product.name}
                 style={{ width: "100%", height: "150px", objectFit: "cover" }}
               />
@@ -48,7 +52,9 @@ function Product() {
             <p style={{ fontSize: "14px", color: "#555" }}>
               {product.description}
             </p>
-            <p style={{ fontWeight: "bold", color: "green" }}>₹{product.price}</p>
+            <p style={{ fontWeight: "bold", color: "green" }}>
+              ₹{product.price}
+            </p>
 
             {/* Show Buy button only for normal users */}
             {userRole !== "admin" && (

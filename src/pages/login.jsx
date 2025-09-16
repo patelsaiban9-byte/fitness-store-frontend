@@ -11,11 +11,14 @@ function Login({ setIsLoggedIn, setUserRole }) {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const res = await fetch(
+        process.env.REACT_APP_API_URL + "/api/auth/login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       const data = await res.json();
 
@@ -47,7 +50,6 @@ function Login({ setIsLoggedIn, setUserRole }) {
   };
 
   return (
-    // ✅ Full screen flex center (overrides container)
     <div
       style={{
         display: "flex",
@@ -107,7 +109,6 @@ function Login({ setIsLoggedIn, setUserRole }) {
             />
           </div>
 
-          {/* Button in box */}
           <div
             style={{
               border: "1px solid #007bff",
@@ -136,7 +137,10 @@ function Login({ setIsLoggedIn, setUserRole }) {
 
         <p style={{ marginTop: "20px" }}>
           Don’t have an account?{" "}
-          <Link to="/register" style={{ color: "#007bff", textDecoration: "none" }}>
+          <Link
+            to="/register"
+            style={{ color: "#007bff", textDecoration: "none" }}
+          >
             Register here
           </Link>
         </p>

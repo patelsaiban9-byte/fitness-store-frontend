@@ -15,11 +15,15 @@ function OrderForm() {
 
   const userRole = localStorage.getItem("role"); // ✅ get role
 
+  // ✅ Use backend URL (works on phone + laptop)
+  const API_URL =
+    process.env.REACT_APP_API_URL || "https://fitness-store-backend.onrender.com";
+
   // Fetch selected product details
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/products/${id}`);
+        const res = await fetch(`${API_URL}/api/products/${id}`);
         const data = await res.json();
         setProduct(data);
       } catch (err) {
@@ -27,7 +31,7 @@ function OrderForm() {
       }
     };
     fetchProduct();
-  }, [id]);
+  }, [id, API_URL]);
 
   // Handle form input change
   const handleChange = (e) => {
@@ -44,20 +48,26 @@ function OrderForm() {
       return;
     }
 
-    const res = await fetch("http://localhost:5000/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...formData,
-        productId: id,
-      }),
-    });
+    try {
+      const res = await fetch(`${API_URL}/api/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          productId: id,
+        }),
+      });
 
-    if (res.ok) {
-      alert("✅ Order placed successfully!");
-      navigate("/products"); // go back to products page
-    } else {
-      alert("❌ Failed to place order");
+      if (res.ok) {
+        alert("✅ Order placed successfully!");
+        navigate("/products"); // go back to products page
+      } else {
+        const data = await res.json();
+        alert(data.message || "❌ Failed to place order");
+      }
+    } catch (err) {
+      console.error("Order error:", err);
+      alert("Something went wrong. Please try again.");
     }
   };
 

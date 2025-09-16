@@ -8,38 +8,37 @@ function Register() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  const API_URL = process.env.REACT_APP_API_URL || "https://fitness-store-backend.onrender.com";
+
   const validateForm = () => {
-    // ✅ Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError("❌ Please enter a valid email address.");
       return false;
     }
 
-    // ✅ Phone validation (10 digits only)
     const phoneRegex = /^[0-9]{10}$/;
     if (!phoneRegex.test(phone)) {
       setError("❌ Phone number must be exactly 10 digits.");
       return false;
     }
 
-    // ✅ Password validation (min 6 chars)
     if (password.length < 6) {
       setError("❌ Password must be at least 6 characters long.");
       return false;
     }
 
-    setError(""); // clear previous errors
+    setError("");
     return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) return; // stop if validation fails
+    if (!validateForm()) return;
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/register", {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, phone, password }),
