@@ -8,7 +8,8 @@ function Register() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const API_URL = process.env.REACT_APP_API_URL || "https://fitness-store-backend.onrender.com";
+  // ✅ Updated: use REACT_APP_API_URL from .env
+  const API_URL = process.env.REACT_APP_API_URL;
 
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

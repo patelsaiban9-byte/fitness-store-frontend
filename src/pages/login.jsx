@@ -11,14 +11,14 @@ function Login({ setIsLoggedIn, setUserRole }) {
     e.preventDefault();
 
     try {
-      const res = await fetch(
-        process.env.REACT_APP_API_URL + "/api/auth/login",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      // ✅ Updated: use REACT_APP_API_URL from .env
+      const apiUrl = process.env.REACT_APP_API_URL;
+
+      const res = await fetch(`${apiUrl}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
       const data = await res.json();
 

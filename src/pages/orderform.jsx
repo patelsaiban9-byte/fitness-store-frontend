@@ -15,9 +15,8 @@ function OrderForm() {
 
   const userRole = localStorage.getItem("role"); // ✅ get role
 
-  // ✅ Use backend URL (works on phone + laptop)
-  const API_URL =
-    process.env.REACT_APP_API_URL || "https://fitness-store-backend.onrender.com";
+  // ✅ Updated: use REACT_APP_API_URL from .env
+  const API_URL = process.env.REACT_APP_API_URL;
 
   // Fetch selected product details
   useEffect(() => {

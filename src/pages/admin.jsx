@@ -10,9 +10,8 @@ function Admin() {
   });
   const [editingId, setEditingId] = useState(null);
 
-  // ✅ Use backend URL
-  const API_URL =
-    process.env.REACT_APP_API_URL || "https://fitness-store-backend.onrender.com";
+  // ✅ Updated: use REACT_APP_API_URL from .env
+  const API_URL = process.env.REACT_APP_API_URL;
 
   // ✅ Fetch products
   const fetchProducts = async () => {
