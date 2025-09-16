@@ -11,8 +11,8 @@ function Login({ setIsLoggedIn, setUserRole }) {
     e.preventDefault();
 
     try {
-      // ✅ Updated: use REACT_APP_API_URL from .env
-      const apiUrl = process.env.REACT_APP_API_URL;
+      // ✅ Updated: use VITE_API_URL from .env for Vite
+      const apiUrl = import.meta.env.VITE_API_URL;
 
       const res = await fetch(`${apiUrl}/api/auth/login`, {
         method: "POST",

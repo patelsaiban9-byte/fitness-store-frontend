@@ -15,8 +15,8 @@ function OrderForm() {
 
   const userRole = localStorage.getItem("role"); // ✅ get role
 
-  // ✅ Updated: use REACT_APP_API_URL from .env
-  const API_URL = process.env.REACT_APP_API_URL;
+  // ✅ Updated: use VITE_API_URL from .env for Vite
+  const API_URL = import.meta.env.VITE_API_URL;
 
   // Fetch selected product details
   useEffect(() => {
