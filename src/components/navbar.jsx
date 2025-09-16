@@ -42,14 +42,26 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                 <li className="nav-item">
                   <Link className="nav-link" to="/products">Products</Link>
                 </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/order/1">Orders</Link> {/* Example */}
-                </li>
-                {userRole === "admin" && (
+
+                {/* Only normal users can place orders */}
+                {userRole !== "admin" && (
                   <li className="nav-item">
-                    <Link className="nav-link" to="/admin">Admin</Link>
+                    <Link className="nav-link" to="/products">Place Order</Link>
                   </li>
                 )}
+
+                {/* Admin-specific links */}
+                {userRole === "admin" && (
+                  <>
+                    <li className="nav-item">
+                      <Link className="nav-link" to="/admin">Admin Dashboard</Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link className="nav-link" to="/admin/orders">View Orders</Link>
+                    </li>
+                  </>
+                )}
+
                 <li className="nav-item">
                   <button className="btn btn-danger ms-3" onClick={handleLogout}>
                     Logout

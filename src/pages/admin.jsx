@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom"; // ✅ Import Link
 
 function Admin() {
   const [products, setProducts] = useState([]);
@@ -114,6 +115,16 @@ function Admin() {
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6 text-center">🛒 Admin Dashboard</h1>
+
+      {/* ✅ Link to Orders Page */}
+      <div className="mb-6 text-center">
+        <Link
+          to="/admin/orders"
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        >
+          📦 View All Orders
+        </Link>
+      </div>
 
       {/* Add / Update Product Form */}
       <form
