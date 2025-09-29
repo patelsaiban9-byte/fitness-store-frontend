@@ -20,16 +20,8 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
   };
 
   return (
-    <nav
-      className="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top"
-      style={{ width: "100%", margin: 0, padding: 0 }}
-    >
-      {/* Full-width container for content */}
-      <div
-        className="container-fluid d-flex justify-content-between align-items-center"
-        style={{ padding: "0 20px" }}
-      >
-        {/* Brand */}
+    <nav className="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top">
+      <div className="container-fluid">
         <Link
           className="navbar-brand fw-bold"
           to="/"
@@ -76,19 +68,6 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                     Products
                   </Link>
                 </li>
-
-                {/* Only normal users can place orders */}
-                {userRole !== "admin" && (
-                  <li className="nav-item">
-                    <Link
-                      className="nav-link"
-                      to="/products"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Place Order
-                    </Link>
-                  </li>
-                )}
 
                 {/* Admin-specific links */}
                 {userRole === "admin" && (
