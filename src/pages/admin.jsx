@@ -49,7 +49,7 @@ function Admin() {
 
       const data = await res.json();
       if (res.ok) {
-        setForm({ ...form, image: data.imageUrl });
+        setForm({ ...form, image: data.imageUrl }); // save returned image URL
       } else {
         alert("Upload failed");
       }
@@ -68,18 +68,14 @@ function Admin() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
         });
-        if (res.ok) {
-          alert("Product updated successfully!");
-        }
+        if (res.ok) alert("Product updated successfully!");
       } else {
         const res = await fetch(`${API_URL}/api/products`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
         });
-        if (res.ok) {
-          alert("Product added successfully!");
-        }
+        if (res.ok) alert("Product added successfully!");
       }
       setForm({ name: "", description: "", price: "", image: "" });
       setEditingId(null);
@@ -115,7 +111,6 @@ function Admin() {
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6 text-center">🛒 Admin Dashboard</h1>
 
-      {/* Link to Orders Page */}
       <div className="mb-6 text-center">
         <Link
           to="/admin/orders"
@@ -125,7 +120,6 @@ function Admin() {
         </Link>
       </div>
 
-      {/* Add / Update Product Form */}
       <form
         onSubmit={handleSubmit}
         className="space-y-3 mb-6 border p-4 rounded shadow-md bg-gray-50"
@@ -166,7 +160,7 @@ function Admin() {
         />
         {form.image && (
           <img
-            src={`${API_URL}${form.image}`}
+            src={`${API_URL}${form.image}`}  // displays uploaded image
             alt="preview"
             className="h-12 w-12 mt-2 rounded object-cover border"
           />
@@ -179,7 +173,6 @@ function Admin() {
         </button>
       </form>
 
-      {/* Product List in Table */}
       <h2 className="text-xl font-semibold mb-3">All Products</h2>
       <table className="table-auto border-collapse border border-gray-300 w-full">
         <thead>
