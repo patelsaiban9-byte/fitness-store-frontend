@@ -2,27 +2,47 @@ import React from "react";
 
 function About() {
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-4xl font-bold mb-4 text-center text-gray-800">
-        About Us
-      </h1>
-      <p className="text-lg text-gray-700 mb-4 text-justify">
-        Welcome to <span className="font-semibold">Health & Fitness Store</span>! 
-        Our mission is to provide top-quality fitness products that help you 
-        achieve your health goals. From premium supplements to high-quality 
-        workout equipment, we carefully select each product to ensure you 
-        get the best.
-      </p>
-      <p className="text-lg text-gray-700 mb-4 text-justify">
-        Our dedicated team is here to guide you and answer your questions, 
-        making your fitness journey smooth and effective. Whether you’re a 
-        beginner or a professional athlete, we have something to help you 
-        succeed.
-      </p>
-      <p className="text-lg text-gray-700 text-justify">
-        Join our community of health enthusiasts and start your journey 
-        towards a healthier, stronger, and happier life today!
-      </p>
+    <div className="bg-gray-50 min-h-screen">
+      {/* Hero Section */}
+      <div className="bg-green-600 text-white py-12">
+        <h1 className="text-5xl font-extrabold text-center mb-2">
+          About Health & Fitness Store
+        </h1>
+        <p className="text-center text-lg max-w-2xl mx-auto">
+          Your one-stop destination for premium fitness products and expert guidance
+        </p>
+      </div>
+
+      {/* Content Section */}
+      <div className="container mx-auto p-6 space-y-8">
+        <section className="bg-white shadow-lg rounded-lg p-6">
+          <h2 className="text-3xl font-bold mb-4 text-gray-800">Our Mission 🎯</h2>
+          <p className="text-gray-700 text-justify leading-relaxed">
+            At <span className="font-semibold">Health & Fitness Store</span>, our mission is to empower
+            individuals to achieve their health and fitness goals. We provide
+            top-quality products ranging from premium supplements to advanced
+            workout equipment, carefully curated to help you succeed.
+          </p>
+        </section>
+
+        <section className="bg-white shadow-lg rounded-lg p-6">
+          <h2 className="text-3xl font-bold mb-4 text-gray-800">Our Team 👥</h2>
+          <p className="text-gray-700 text-justify leading-relaxed">
+            Our dedicated team is committed to assisting you at every step of your
+            fitness journey. Whether you are a beginner or a professional athlete,
+            we provide guidance, support, and advice to ensure you reach your goals.
+          </p>
+        </section>
+
+        <section className="bg-white shadow-lg rounded-lg p-6">
+          <h2 className="text-3xl font-bold mb-4 text-gray-800">Join Our Community 💪</h2>
+          <p className="text-gray-700 text-justify leading-relaxed">
+            Become a part of our community of health enthusiasts. Explore our
+            products, follow our expert tips, and take the first step towards a
+            healthier, stronger, and happier life.
+          </p>
+        </section>
+      </div>
     </div>
   );
 }
