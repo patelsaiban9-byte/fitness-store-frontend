@@ -99,22 +99,24 @@ function Product() {
 
       <style>
         {`
+          /* Mobile first */
           .product-grid {
             display: grid;
             gap: 20px;
-            grid-template-columns: repeat(2, 1fr); /* mobile = 2 per row */
-            width: 100%;
+            grid-template-columns: repeat(2, 1fr); /* 2 per row on phone */
           }
 
+          /* Tablets */
           @media (min-width: 768px) {
             .product-grid {
-              grid-template-columns: repeat(4, 1fr); /* tablet = 4 per row */
+              grid-template-columns: repeat(4, 1fr); /* 4 per row */
             }
           }
 
+          /* Desktop */
           @media (min-width: 1200px) {
             .product-grid {
-              grid-template-columns: repeat(6, 1fr); /* desktop = 6 per row */
+              grid-template-columns: repeat(6, 1fr); /* 6 per row on large screens */
             }
           }
         `}
