@@ -42,7 +42,7 @@ function Admin() {
     formData.append("image", file);
 
     try {
-      const res = await fetch(`${API_URL}/api/upload`, {
+      const res = await fetch(`${API_URL}uploads`, {
         method: "POST",
         body: formData,
       });
