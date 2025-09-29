@@ -46,7 +46,8 @@ function Admin() {
       });
       const data = await res.json();
       if (res.ok || res.status === 200) {
-        setForm({ ...form, image: data.imageUrl });
+        // Ensure correct path for preview
+        setForm({ ...form, image: data.imageUrl.replace(/^\/+/, "/") });
       } else {
         alert(data.message || "Upload failed");
       }
@@ -111,8 +112,12 @@ function Admin() {
     setEditingId(product._id);
   };
 
-  // Fix image URL
-  const getImageUrl = (img) => (img?.startsWith("http") ? img : `${API_URL}${img}`);
+  // Fix image URL for preview
+  const getImageUrl = (img) => {
+    if (!img) return "";
+    const trimmed = img.startsWith("/") ? img.slice(1) : img;
+    return `${API_URL}/${trimmed}`;
+  };
 
   return (
     <div className="p-6">
@@ -234,10 +239,7 @@ function Admin() {
               </td>
               <td className="border px-4 py-2 space-x-2">
                 <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleEdit(p);
-                  }}
+                  onClick={(e) => { e.preventDefault(); handleEdit(p); }}
                   className="bg-yellow-500 text-white px-3 py-1 rounded"
                 >
                   Edit
