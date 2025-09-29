@@ -4,13 +4,15 @@ import Login from "./pages/login";
 import Home from "./pages/home";
 import Products from "./pages/product";
 import Admin from "./pages/admin";
-import AdminOrders from "./pages/adminorder"; // ✅ Admin Orders
+import AdminOrders from "./pages/adminorder";
 import OrderForm from "./pages/orderform";
 import Register from "./pages/register";
-import About from "./pages/about"; // ✅ Import About page
+import About from "./pages/about";
+
+
 import { useState, useEffect } from "react";
 
-// ✅ Route protection wrappers
+// Route protection wrappers
 function ProtectedRoute({ isLoggedIn, children }) {
   if (!isLoggedIn) return <Navigate to="/login" />;
   return children;
@@ -22,7 +24,7 @@ function AdminRoute({ isLoggedIn, userRole, children }) {
   return children;
 }
 
-// ✅ Wrapper to hide Navbar on login/register
+// Wrapper to hide Navbar on login/register
 function Layout({ children, isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
   const location = useLocation();
   const hideNavbar = ["/login", "/register"].includes(location.pathname);
@@ -46,7 +48,6 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState(null);
 
-  // ✅ Keep user logged in on refresh
   useEffect(() => {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
@@ -98,6 +99,16 @@ function App() {
             element={
               <ProtectedRoute isLoggedIn={isLoggedIn}>
                 <About />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Add Product */}
+          <Route
+            path="/add-product"
+            element={
+              <ProtectedRoute isLoggedIn={isLoggedIn}>
+                <AddProduct />
               </ProtectedRoute>
             }
           />
