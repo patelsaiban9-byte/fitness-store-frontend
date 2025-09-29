@@ -9,7 +9,6 @@ import OrderForm from "./pages/orderform";
 import Register from "./pages/register";
 import About from "./pages/about";
 
-
 import { useState, useEffect } from "react";
 
 // Route protection wrappers
@@ -99,16 +98,6 @@ function App() {
             element={
               <ProtectedRoute isLoggedIn={isLoggedIn}>
                 <About />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Add Product */}
-          <Route
-            path="/add-product"
-            element={
-              <ProtectedRoute isLoggedIn={isLoggedIn}>
-                <AddProduct />
               </ProtectedRoute>
             }
           />

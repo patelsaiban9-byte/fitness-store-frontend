@@ -12,8 +12,7 @@ function Admin() {
   const [editingId, setEditingId] = useState(null);
 
   const API_URL =
-    import.meta.env.VITE_API_URL ||
-    "https://fitness-store-backend.onrender.com";
+    import.meta.env.VITE_API_URL || "http://localhost:5000"; // ensure correct backend
 
   // Fetch products
   const fetchProducts = async () => {
@@ -48,12 +47,11 @@ function Admin() {
         method: "POST",
         body: formData,
       });
-
       const data = await res.json();
       if (res.ok) {
         setForm({ ...form, image: data.imageUrl });
       } else {
-        alert("Upload failed");
+        alert(data.message || "Upload failed");
       }
     } catch (err) {
       console.error("Upload error:", err);
@@ -63,6 +61,10 @@ function Admin() {
   // Add / Update product
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.image) {
+      alert("Please upload an image first");
+      return;
+    }
     try {
       if (editingId) {
         const res = await fetch(`${API_URL}/api/products/${editingId}`, {
@@ -70,18 +72,14 @@ function Admin() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
         });
-        if (res.ok) {
-          alert("Product updated successfully!");
-        }
+        if (res.ok) alert("Product updated successfully!");
       } else {
         const res = await fetch(`${API_URL}/api/products`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
         });
-        if (res.ok) {
-          alert("Product added successfully!");
-        }
+        if (res.ok) alert("Product added successfully!");
       }
       setForm({ name: "", description: "", price: "", image: "" });
       setEditingId(null);
@@ -93,9 +91,10 @@ function Admin() {
 
   // Delete product
   const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
-      await fetch(`${API_URL}/api/products/${id}`, { method: "DELETE" });
-      alert("Product deleted!");
+      const res = await fetch(`${API_URL}/api/products/${id}`, { method: "DELETE" });
+      if (res.ok) alert("Product deleted!");
       fetchProducts();
     } catch (error) {
       console.error("Error deleting product:", error);
@@ -113,7 +112,7 @@ function Admin() {
     setEditingId(product._id);
   };
 
-  // ✅ Utility: Fix image path
+  // Fix image path
   const getImageUrl = (img) => {
     if (!img) return "";
     return img.startsWith("http") ? img : `${API_URL}${img}`;
@@ -138,7 +137,9 @@ function Admin() {
         onSubmit={handleSubmit}
         className="space-y-3 mb-6 border p-4 rounded shadow-md bg-gray-50"
       >
+        <label htmlFor="name">Product Name</label>
         <input
+          id="name"
           type="text"
           name="name"
           placeholder="Product Name"
@@ -146,8 +147,12 @@ function Admin() {
           onChange={handleChange}
           className="border p-2 w-full rounded"
           required
+          autoComplete="off"
         />
+
+        <label htmlFor="description">Description</label>
         <input
+          id="description"
           type="text"
           name="description"
           placeholder="Description"
@@ -155,8 +160,12 @@ function Admin() {
           onChange={handleChange}
           className="border p-2 w-full rounded"
           required
+          autoComplete="off"
         />
+
+        <label htmlFor="price">Price</label>
         <input
+          id="price"
           type="number"
           name="price"
           placeholder="Price"
@@ -165,12 +174,16 @@ function Admin() {
           className="border p-2 w-full rounded"
           required
         />
+
+        <label htmlFor="image">Product Image</label>
         <input
+          id="image"
           type="file"
           name="image"
           accept="image/*"
           onChange={handleImageUpload}
           className="border p-2 w-full rounded"
+          required={!editingId}
         />
         {form.image && (
           <img
@@ -179,6 +192,7 @@ function Admin() {
             className="h-12 w-12 mt-2 rounded object-cover border"
           />
         )}
+
         <button
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded w-full"
@@ -187,7 +201,7 @@ function Admin() {
         </button>
       </form>
 
-      {/* Product List in Table */}
+      {/* Product List */}
       <h2 className="text-xl font-semibold mb-3">All Products</h2>
       <table className="table-auto border-collapse border border-gray-300 w-full">
         <thead>
