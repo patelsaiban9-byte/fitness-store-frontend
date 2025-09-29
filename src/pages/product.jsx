@@ -28,8 +28,11 @@ function Product() {
     <div style={{ padding: "20px" }}>
       <h1 className="text-center mb-4">Available Products</h1>
 
-      {/* ✅ Responsive Grid */}
-      <div className="product-grid">
+      {/* ✅ Responsive Grid: 2 cols on mobile, 4 cols on desktop */}
+      <div
+        className="grid gap-5 sm:grid-cols-2 md:grid-cols-4"
+        style={{ alignItems: "stretch" }}
+      >
         {products.map((product) => (
           <div
             key={product._id}
@@ -40,44 +43,29 @@ function Product() {
               boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
               textAlign: "center",
               background: "#fff",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              minHeight: "320px",
-              transition: "transform 0.2s, box-shadow 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "scale(1.03)";
-              e.currentTarget.style.boxShadow =
-                "0 4px 12px rgba(0,0,0,0.2)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "scale(1)";
-              e.currentTarget.style.boxShadow =
-                "0 2px 5px rgba(0,0,0,0.1)";
             }}
           >
-            <div>
-              {product.image && (
-                <img
-                  src={`${API_URL}${product.image}`}
-                  alt={product.name}
-                  style={{
-                    width: "100%",
-                    height: "150px",
-                    objectFit: "cover",
-                    borderRadius: "5px",
-                  }}
-                />
-              )}
-              <h3 style={{ margin: "10px 0" }}>{product.name}</h3>
-              <p style={{ fontSize: "14px", color: "#555" }}>
-                {product.description}
-              </p>
-              <p style={{ fontWeight: "bold", color: "green" }}>
-                ₹{product.price}
-              </p>
-            </div>
+            {/* ✅ Show product image from backend */}
+            {product.image && (
+              <img
+                src={`${API_URL}${product.image}`}
+                alt={product.name}
+                style={{
+                  width: "100%",
+                  height: "150px",
+                  objectFit: "cover",
+                  borderRadius: "5px",
+                }}
+              />
+            )}
+
+            <h3 style={{ margin: "10px 0" }}>{product.name}</h3>
+            <p style={{ fontSize: "14px", color: "#555" }}>
+              {product.description}
+            </p>
+            <p style={{ fontWeight: "bold", color: "green" }}>
+              ₹{product.price}
+            </p>
 
             {/* Show Buy button only for normal users */}
             {userRole !== "admin" && (
@@ -91,7 +79,7 @@ function Product() {
                   borderRadius: "5px",
                   cursor: "pointer",
                   marginTop: "10px",
-                  width: "100%",
+                  width: "100%", // ✅ full width button
                 }}
               >
                 Buy
@@ -100,23 +88,6 @@ function Product() {
           </div>
         ))}
       </div>
-
-      {/* ✅ CSS for responsive grid */}
-      <style>
-        {`
-          .product-grid {
-            display: grid;
-            gap: 20px;
-            grid-template-columns: repeat(2, 1fr); /* mobile = 2 */
-          }
-
-          @media (min-width: 768px) {
-            .product-grid {
-              grid-template-columns: repeat(4, 1fr); /* desktop = 4 */
-            }
-          }
-        `}
-      </style>
     </div>
   );
 }
