@@ -30,7 +30,6 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
           🏋️ Health & Fitness
         </Link>
 
-        {/* Toggle button for mobile */}
         <button
           className="navbar-toggler"
           type="button"
@@ -42,7 +41,6 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
           <span className="navbar-toggler-icon"></span>
         </button>
 
-        {/* Collapsible items */}
         <div
           className={`collapse navbar-collapse ${isOpen ? "show" : ""}`}
           id="navbarNav"
@@ -68,8 +66,16 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                     Products
                   </Link>
                 </li>
+                <li className="nav-item">
+                  <Link
+                    className="nav-link"
+                    to="/about"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    About Us
+                  </Link>
+                </li>
 
-                {/* Admin-specific links */}
                 {userRole === "admin" && (
                   <>
                     <li className="nav-item">
