@@ -21,7 +21,8 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
 
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top">
-      <div className="container">
+      {/* Use container-fluid for full width */}
+      <div className="container-fluid">
         <Link
           className="navbar-brand fw-bold"
           to="/"
