@@ -11,8 +11,7 @@ function Admin() {
   });
   const [editingId, setEditingId] = useState(null);
 
-  const API_URL =
-    import.meta.env.VITE_API_URL || "http://localhost:5000"; // ensure correct backend
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   // Fetch products
   const fetchProducts = async () => {
@@ -29,10 +28,8 @@ function Admin() {
     fetchProducts();
   }, []);
 
-  // Handle input change
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  // Handle input changes
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   // Handle image upload
   const handleImageUpload = async (e) => {
@@ -48,17 +45,14 @@ function Admin() {
         body: formData,
       });
       const data = await res.json();
-      if (res.ok) {
-        setForm({ ...form, image: data.imageUrl });
-      } else {
-        alert(data.message || "Upload failed");
-      }
+      if (res.ok) setForm({ ...form, image: data.imageUrl });
+      else alert(data.message || "Upload failed");
     } catch (err) {
       console.error("Upload error:", err);
     }
   };
 
-  // Add / Update product
+  // Add or update product
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.image) {
@@ -66,21 +60,18 @@ function Admin() {
       return;
     }
     try {
-      if (editingId) {
-        const res = await fetch(`${API_URL}/api/products/${editingId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        });
-        if (res.ok) alert("Product updated successfully!");
-      } else {
-        const res = await fetch(`${API_URL}/api/products`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        });
-        if (res.ok) alert("Product added successfully!");
-      }
+      const url = editingId
+        ? `${API_URL}/api/products/${editingId}`
+        : `${API_URL}/api/products`;
+      const method = editingId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      if (res.ok) alert(editingId ? "Product updated!" : "Product added!");
       setForm({ name: "", description: "", price: "", image: "" });
       setEditingId(null);
       fetchProducts();
@@ -112,17 +103,14 @@ function Admin() {
     setEditingId(product._id);
   };
 
-  // Fix image path
-  const getImageUrl = (img) => {
-    if (!img) return "";
-    return img.startsWith("http") ? img : `${API_URL}${img}`;
-  };
+  // Fix image URL
+  const getImageUrl = (img) => (img?.startsWith("http") ? img : `${API_URL}${img}`);
 
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6 text-center">🛒 Admin Dashboard</h1>
 
-      {/* Link to Orders Page */}
+      {/* Orders Link */}
       <div className="mb-6 text-center">
         <Link
           to="/admin/orders"
@@ -137,61 +125,69 @@ function Admin() {
         onSubmit={handleSubmit}
         className="space-y-3 mb-6 border p-4 rounded shadow-md bg-gray-50"
       >
-        <label htmlFor="name">Product Name</label>
-        <input
-          id="name"
-          type="text"
-          name="name"
-          placeholder="Product Name"
-          value={form.name}
-          onChange={handleChange}
-          className="border p-2 w-full rounded"
-          required
-          autoComplete="off"
-        />
-
-        <label htmlFor="description">Description</label>
-        <input
-          id="description"
-          type="text"
-          name="description"
-          placeholder="Description"
-          value={form.description}
-          onChange={handleChange}
-          className="border p-2 w-full rounded"
-          required
-          autoComplete="off"
-        />
-
-        <label htmlFor="price">Price</label>
-        <input
-          id="price"
-          type="number"
-          name="price"
-          placeholder="Price"
-          value={form.price}
-          onChange={handleChange}
-          className="border p-2 w-full rounded"
-          required
-        />
-
-        <label htmlFor="image">Product Image</label>
-        <input
-          id="image"
-          type="file"
-          name="image"
-          accept="image/*"
-          onChange={handleImageUpload}
-          className="border p-2 w-full rounded"
-          required={!editingId}
-        />
-        {form.image && (
-          <img
-            src={getImageUrl(form.image)}
-            alt="preview"
-            className="h-12 w-12 mt-2 rounded object-cover border"
+        <div>
+          <label htmlFor="name" className="block font-medium">Product Name</label>
+          <input
+            id="name"
+            type="text"
+            name="name"
+            placeholder="Product Name"
+            value={form.name}
+            onChange={handleChange}
+            className="border p-2 w-full rounded"
+            required
+            autoComplete="off"
           />
-        )}
+        </div>
+
+        <div>
+          <label htmlFor="description" className="block font-medium">Description</label>
+          <input
+            id="description"
+            type="text"
+            name="description"
+            placeholder="Description"
+            value={form.description}
+            onChange={handleChange}
+            className="border p-2 w-full rounded"
+            required
+            autoComplete="off"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="price" className="block font-medium">Price</label>
+          <input
+            id="price"
+            type="number"
+            name="price"
+            placeholder="Price"
+            value={form.price}
+            onChange={handleChange}
+            className="border p-2 w-full rounded"
+            required
+          />
+        </div>
+
+        <div>
+          <label htmlFor="image" className="block font-medium">Product Image</label>
+          <input
+            id="image"
+            type="file"
+            name="image"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="border p-2 w-full rounded"
+            required={!editingId}
+          />
+          {form.image && (
+            <img
+              src={getImageUrl(form.image)}
+              alt="preview"
+              className="h-12 w-12 mt-2 rounded object-cover border"
+            />
+          )}
+        </div>
 
         <button
           type="submit"
