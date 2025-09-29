@@ -23,7 +23,7 @@ function Product() {
   }, []);
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={{ padding: "20px", width: "100%", boxSizing: "border-box" }}>
       <h1 className="text-center mb-4">Available Products</h1>
 
       <div className="product-grid">
@@ -102,18 +102,19 @@ function Product() {
           .product-grid {
             display: grid;
             gap: 20px;
-            grid-template-columns: repeat(1, 1fr); /* default = 1 per row */
+            grid-template-columns: repeat(2, 1fr); /* mobile = 2 per row */
+            width: 100%;
           }
 
-          @media (min-width: 576px) {
+          @media (min-width: 768px) {
             .product-grid {
-              grid-template-columns: repeat(2, 1fr); /* phones/tablets = 2 */
+              grid-template-columns: repeat(4, 1fr); /* tablet = 4 per row */
             }
           }
 
-          @media (min-width: 992px) {
+          @media (min-width: 1200px) {
             .product-grid {
-              grid-template-columns: repeat(4, 1fr); /* desktop = 4 */
+              grid-template-columns: repeat(6, 1fr); /* desktop = 6 per row */
             }
           }
         `}
