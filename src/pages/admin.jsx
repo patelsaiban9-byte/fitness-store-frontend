@@ -45,8 +45,11 @@ function Admin() {
         body: formData,
       });
       const data = await res.json();
-      if (res.ok) setForm({ ...form, image: data.imageUrl });
-      else alert(data.message || "Upload failed");
+      if (res.ok || res.status === 200) {
+        setForm({ ...form, image: data.imageUrl });
+      } else {
+        alert(data.message || "Upload failed");
+      }
     } catch (err) {
       console.error("Upload error:", err);
     }
@@ -59,6 +62,7 @@ function Admin() {
       alert("Please upload an image first");
       return;
     }
+
     try {
       const url = editingId
         ? `${API_URL}/api/products/${editingId}`
@@ -71,10 +75,12 @@ function Admin() {
         body: JSON.stringify(form),
       });
 
-      if (res.ok) alert(editingId ? "Product updated!" : "Product added!");
-      setForm({ name: "", description: "", price: "", image: "" });
-      setEditingId(null);
-      fetchProducts();
+      if (res.ok || res.status === 200 || res.status === 201) {
+        alert(editingId ? "Product updated!" : "Product added!");
+        setForm({ name: "", description: "", price: "", image: "" });
+        setEditingId(null);
+        fetchProducts();
+      }
     } catch (error) {
       console.error("Error saving product:", error);
     }
@@ -85,8 +91,10 @@ function Admin() {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
       const res = await fetch(`${API_URL}/api/products/${id}`, { method: "DELETE" });
-      if (res.ok) alert("Product deleted!");
-      fetchProducts();
+      if (res.ok) {
+        alert("Product deleted!");
+        fetchProducts();
+      }
     } catch (error) {
       console.error("Error deleting product:", error);
     }
