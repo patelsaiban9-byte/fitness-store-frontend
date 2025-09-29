@@ -4,9 +4,10 @@ import Login from "./pages/login";
 import Home from "./pages/home";
 import Products from "./pages/product";
 import Admin from "./pages/admin";
-import AdminOrders from "./pages/adminorder"; // ✅ Import AdminOrders
+import AdminOrders from "./pages/adminorder"; // ✅ Admin Orders
 import OrderForm from "./pages/orderform";
 import Register from "./pages/register";
+import About from "./pages/about"; // ✅ Import About page
 import { useState, useEffect } from "react";
 
 // ✅ Route protection wrappers
@@ -87,6 +88,16 @@ function App() {
             element={
               <ProtectedRoute isLoggedIn={isLoggedIn}>
                 <Products />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* About */}
+          <Route
+            path="/about"
+            element={
+              <ProtectedRoute isLoggedIn={isLoggedIn}>
+                <About />
               </ProtectedRoute>
             }
           />
