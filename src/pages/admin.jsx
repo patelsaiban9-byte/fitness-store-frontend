@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom"; // ✅ Import Link
+import { Link } from "react-router-dom";
 
 function Admin() {
   const [products, setProducts] = useState([]);
@@ -11,10 +11,9 @@ function Admin() {
   });
   const [editingId, setEditingId] = useState(null);
 
-  // ✅ Updated: use VITE_API_URL from .env for Vite
   const API_URL = import.meta.env.VITE_API_URL || "https://fitness-store-backend.onrender.com";
 
-  // ✅ Fetch products
+  // Fetch products
   const fetchProducts = async () => {
     try {
       const res = await fetch(`${API_URL}/api/products`);
@@ -29,12 +28,12 @@ function Admin() {
     fetchProducts();
   }, []);
 
-  // ✅ Handle input change
+  // Handle input change
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // ✅ Handle image upload
+  // Handle image upload
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -59,7 +58,7 @@ function Admin() {
     }
   };
 
-  // ✅ Add / Update product
+  // Add / Update product
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -90,7 +89,7 @@ function Admin() {
     }
   };
 
-  // ✅ Delete product
+  // Delete product
   const handleDelete = async (id) => {
     try {
       await fetch(`${API_URL}/api/products/${id}`, { method: "DELETE" });
@@ -101,7 +100,7 @@ function Admin() {
     }
   };
 
-  // ✅ Edit product
+  // Edit product
   const handleEdit = (product) => {
     setForm({
       name: product.name,
@@ -116,7 +115,7 @@ function Admin() {
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6 text-center">🛒 Admin Dashboard</h1>
 
-      {/* ✅ Link to Orders Page */}
+      {/* Link to Orders Page */}
       <div className="mb-6 text-center">
         <Link
           to="/admin/orders"
@@ -203,13 +202,13 @@ function Admin() {
                   <img
                     src={`${API_URL}${p.image}`}
                     alt={p.name}
-                    className="h-12 w-12 mx-auto rounded object-cover border"
+                    className="h-8 w-8 mx-auto rounded object-cover border"
                   />
                 )}
               </td>
               <td className="border px-4 py-2 space-x-2">
                 <button
-                  onClick={() => handleEdit(p)}
+                  onClick={(e) => { e.preventDefault(); handleEdit(p); }}
                   className="bg-yellow-500 text-white px-3 py-1 rounded"
                 >
                   Edit
