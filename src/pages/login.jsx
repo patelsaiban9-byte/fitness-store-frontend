@@ -11,7 +11,6 @@ function Login({ setIsLoggedIn, setUserRole }) {
     e.preventDefault();
 
     try {
-      // ✅ Updated: use VITE_API_URL from .env for Vite
       const apiUrl = import.meta.env.VITE_API_URL;
 
       const res = await fetch(`${apiUrl}/api/auth/login`, {
@@ -27,7 +26,6 @@ function Login({ setIsLoggedIn, setUserRole }) {
         return;
       }
 
-      // Save token + role + email
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.user.role);
       localStorage.setItem("email", data.user.email);
@@ -37,7 +35,6 @@ function Login({ setIsLoggedIn, setUserRole }) {
 
       alert("✅ Login Successful");
 
-      // Redirect based on role
       if (data.user.role === "admin") {
         navigate("/admin");
       } else {
@@ -50,97 +47,45 @@ function Login({ setIsLoggedIn, setUserRole }) {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        backgroundColor: "#f4f6f8",
-        margin: 0,
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: "#fff",
-          padding: "30px",
-          borderRadius: "10px",
-          boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-          width: "100%",
-          maxWidth: "400px",
-          textAlign: "center",
-        }}
-      >
-        <h2 style={{ marginBottom: "20px" }}>🔐 Login</h2>
-        {error && <p style={{ color: "red", marginBottom: "15px" }}>{error}</p>}
+    <div className="container-fluid d-flex align-items-center justify-content-center vh-100 bg-light">
+      <div className="card shadow-lg border-0 p-4" style={{ maxWidth: "420px", width: "100%" }}>
+        <h3 className="text-center mb-4 fw-bold text-primary">🔐 Login</h3>
+
+        {error && <div className="alert alert-danger text-center">{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: "15px", textAlign: "left" }}>
-            <label>Email:</label>
+          <div className="mb-3">
+            <label className="form-label fw-semibold">Email</label>
             <input
               type="email"
+              className="form-control form-control-lg"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px",
-                marginTop: "5px",
-                border: "1px solid #ccc",
-                borderRadius: "5px",
-              }}
+              placeholder="Enter your email"
               required
             />
           </div>
 
-          <div style={{ marginBottom: "15px", textAlign: "left" }}>
-            <label>Password:</label>
+          <div className="mb-3">
+            <label className="form-label fw-semibold">Password</label>
             <input
               type="password"
+              className="form-control form-control-lg"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px",
-                marginTop: "5px",
-                border: "1px solid #ccc",
-                borderRadius: "5px",
-              }}
+              placeholder="Enter your password"
               required
             />
           </div>
 
-          <div
-            style={{
-              border: "1px solid #007bff",
-              borderRadius: "8px",
-              padding: "10px",
-              marginTop: "20px",
-            }}
-          >
-            <button
-              type="submit"
-              style={{
-                width: "100%",
-                padding: "10px",
-                backgroundColor: "#007bff",
-                color: "#fff",
-                border: "none",
-                borderRadius: "5px",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              Login
-            </button>
-          </div>
+          <button type="submit" className="btn btn-primary btn-lg w-100">
+            Login
+          </button>
         </form>
 
-        <p style={{ marginTop: "20px" }}>
+        <p className="mt-3 text-center">
           Don’t have an account?{" "}
-          <Link
-            to="/register"
-            style={{ color: "#007bff", textDecoration: "none" }}
-          >
+          <Link to="/register" className="fw-semibold text-decoration-none text-primary">
             Register here
           </Link>
         </p>
