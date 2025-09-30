@@ -47,13 +47,16 @@ function Login({ setIsLoggedIn, setUserRole }) {
   };
 
   return (
+    
     <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
+   
       <div className="card shadow-lg border-0 p-4 w-100" style={{ maxWidth: "420px" }}>
         <h3 className="text-center mb-4 fw-bold text-primary">🔐 Login</h3>
 
         {error && <div className="alert alert-danger text-center">{error}</div>}
 
         <form onSubmit={handleSubmit}>
+        
           <div className="mb-3">
             <label className="form-label fw-semibold">Email</label>
             <input
@@ -81,6 +84,7 @@ function Login({ setIsLoggedIn, setUserRole }) {
           <button type="submit" className="btn btn-primary btn-lg w-100">
             Login
           </button>
+          
         </form>
 
         <p className="mt-3 text-center">
@@ -89,8 +93,13 @@ function Login({ setIsLoggedIn, setUserRole }) {
             Register here
           </Link>
         </p>
+        
       </div>
+      
     </div>
+    
+    
+ 
   );
 }
 
