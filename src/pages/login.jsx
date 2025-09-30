@@ -11,7 +11,9 @@ function Login({ setIsLoggedIn, setUserRole }) {
     e.preventDefault();
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL;
+      // ✅ Use .env variable, fallback added for safety
+      const apiUrl =
+        import.meta.env.VITE_API_URL || "http://localhost:5000";
 
       const res = await fetch(`${apiUrl}/api/auth/login`, {
         method: "POST",
@@ -41,22 +43,24 @@ function Login({ setIsLoggedIn, setUserRole }) {
         navigate("/");
       }
     } catch (err) {
-      console.error(err);
+      console.error("❌ Login error:", err);
       setError("Something went wrong. Please try again.");
     }
   };
 
   return (
-    
     <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
-   
-      <div className="card shadow-lg border-0 p-4 w-100" style={{ maxWidth: "420px" }}>
+      <div
+        className="card shadow-lg border-0 p-4 w-100"
+        style={{ maxWidth: "420px" }}
+      >
         <h3 className="text-center mb-4 fw-bold text-primary">🔐 Login</h3>
 
-        {error && <div className="alert alert-danger text-center">{error}</div>}
+        {error && (
+          <div className="alert alert-danger text-center">{error}</div>
+        )}
 
         <form onSubmit={handleSubmit}>
-        
           <div className="mb-3">
             <label className="form-label fw-semibold">Email</label>
             <input
@@ -84,22 +88,19 @@ function Login({ setIsLoggedIn, setUserRole }) {
           <button type="submit" className="btn btn-primary btn-lg w-100">
             Login
           </button>
-          
         </form>
 
         <p className="mt-3 text-center">
           Don’t have an account?{" "}
-          <Link to="/register" className="fw-semibold text-decoration-none text-primary">
+          <Link
+            to="/register"
+            className="fw-semibold text-decoration-none text-primary"
+          >
             Register here
           </Link>
         </p>
-        
       </div>
-      
     </div>
-    
-    
- 
   );
 }
 
