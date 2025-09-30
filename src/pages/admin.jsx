@@ -28,26 +28,26 @@ function Admin() {
     fetchProducts();
   }, []);
 
-  // Handle input changes
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  // Handle image upload
+  // Image upload with instant preview
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Show local preview immediately
+    const localPreview = URL.createObjectURL(file);
+    setForm({ ...form, image: localPreview });
 
     const formData = new FormData();
     formData.append("image", file);
 
     try {
-      const res = await fetch(`${API_URL}/api/upload`, {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch(`${API_URL}/api/upload`, { method: "POST", body: formData });
       const data = await res.json();
       if (res.ok || res.status === 200) {
-        // Ensure the path works correctly for preview
-        setForm({ ...form, image: data.imageUrl });
+        // Replace preview with server URL after upload
+        setForm({ ...form, image: data.imageUrl.replace(/^\/+/, "") });
       } else {
         alert(data.message || "Upload failed");
       }
@@ -112,13 +112,14 @@ function Admin() {
     setEditingId(product._id);
   };
 
-  // Fix image URL for preview
-  const getImageUrl = (img) => (img ? `${API_URL}/${img}` : "");
+  // Fix image URL
+  const getImageUrl = (img) => (img ? `${API_URL}/${img.replace(/^\/+/, "")}` : "");
 
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6 text-center">🛒 Admin Dashboard</h1>
 
+      {/* Orders Link */}
       <div className="mb-6 text-center">
         <Link
           to="/admin/orders"
@@ -128,10 +129,8 @@ function Admin() {
         </Link>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-3 mb-6 border p-4 rounded shadow-md bg-gray-50"
-      >
+      {/* Add / Update Product Form */}
+      <form onSubmit={handleSubmit} className="space-y-3 mb-6 border p-4 rounded shadow-md bg-gray-50">
         <div>
           <label htmlFor="name" className="block font-medium">Product Name</label>
           <input
@@ -204,6 +203,7 @@ function Admin() {
         </button>
       </form>
 
+      {/* Product List */}
       <h2 className="text-xl font-semibold mb-3">All Products</h2>
       <table className="table-auto border-collapse border border-gray-300 w-full">
         <thead>
