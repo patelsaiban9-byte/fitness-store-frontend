@@ -47,8 +47,8 @@ function Login({ setIsLoggedIn, setUserRole }) {
   };
 
   return (
-    <div className="container-fluid d-flex align-items-center justify-content-center vh-100 bg-light">
-      <div className="card shadow-lg border-0 p-4" style={{ maxWidth: "420px", width: "100%" }}>
+    <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
+      <div className="card shadow-lg border-0 p-4 w-100" style={{ maxWidth: "420px" }}>
         <h3 className="text-center mb-4 fw-bold text-primary">🔐 Login</h3>
 
         {error && <div className="alert alert-danger text-center">{error}</div>}

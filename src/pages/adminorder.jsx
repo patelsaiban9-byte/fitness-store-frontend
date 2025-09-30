@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 
 function AdminOrders() {
   const [orders, setOrders] = useState([]);
-  // ✅ Use Vite env variable
   const API_URL = import.meta.env.VITE_API_URL;
 
   // Fetch all orders from backend
@@ -60,7 +59,6 @@ function AdminOrders() {
               <th style={{ border: "1px solid #ccc", padding: "8px" }}>Name</th>
               <th style={{ border: "1px solid #ccc", padding: "8px" }}>Address</th>
               <th style={{ border: "1px solid #ccc", padding: "8px" }}>Phone</th>
-              <th style={{ border: "1px solid #ccc", padding: "8px" }}>Pincode</th>
               <th style={{ border: "1px solid #ccc", padding: "8px" }}>Product</th>
               <th style={{ border: "1px solid #ccc", padding: "8px" }}>Price</th>
               <th style={{ border: "1px solid #ccc", padding: "8px" }}>Actions</th>
@@ -72,7 +70,6 @@ function AdminOrders() {
                 <td style={{ border: "1px solid #ccc", padding: "8px" }}>{order.name}</td>
                 <td style={{ border: "1px solid #ccc", padding: "8px" }}>{order.address}</td>
                 <td style={{ border: "1px solid #ccc", padding: "8px" }}>{order.phone}</td>
-                <td style={{ border: "1px solid #ccc", padding: "8px" }}>{order.pincode}</td>
                 <td style={{ border: "1px solid #ccc", padding: "8px" }}>
                   {order.productId ? order.productId.name : "Product deleted"}
                 </td>
