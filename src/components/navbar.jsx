@@ -12,7 +12,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
     setIsLoggedIn(false);
     setUserRole(null);
     navigate("/login");
-    setIsOpen(false); // close menu on logout
+    setIsOpen(false);
   };
 
   const toggleNavbar = () => {
@@ -20,8 +20,11 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top">
-      <div className="container-fluid">
+    <nav
+      className="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top"
+      style={{ width: "100vw", margin: 0, padding: 0 }}
+    >
+      <div className="d-flex w-100 px-3">
         <Link
           className="navbar-brand fw-bold"
           to="/"
@@ -31,7 +34,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
         </Link>
 
         <button
-          className="navbar-toggler"
+          className="navbar-toggler ms-auto"
           type="button"
           onClick={toggleNavbar}
           aria-controls="navbarNav"
@@ -45,7 +48,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
           className={`collapse navbar-collapse ${isOpen ? "show" : ""}`}
           id="navbarNav"
         >
-          <ul className="navbar-nav ms-auto text-center">
+          <ul className="navbar-nav ms-auto text-center w-100 justify-content-end">
             {isLoggedIn && (
               <>
                 <li className="nav-item">
