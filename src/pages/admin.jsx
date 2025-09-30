@@ -28,8 +28,10 @@ function Admin() {
     fetchProducts();
   }, []);
 
+  // Handle input changes
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  // Handle image upload
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -38,10 +40,14 @@ function Admin() {
     formData.append("image", file);
 
     try {
-      const res = await fetch(`${API_URL}/api/upload`, { method: "POST", body: formData });
+      const res = await fetch(`${API_URL}/api/upload`, {
+        method: "POST",
+        body: formData,
+      });
       const data = await res.json();
       if (res.ok || res.status === 200) {
-        setForm({ ...form, image: data.imageUrl.replace(/^\/+/, "") });
+        // Ensure the path works correctly for preview
+        setForm({ ...form, image: data.imageUrl });
       } else {
         alert(data.message || "Upload failed");
       }
@@ -50,6 +56,7 @@ function Admin() {
     }
   };
 
+  // Add or update product
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.image) {
@@ -80,6 +87,7 @@ function Admin() {
     }
   };
 
+  // Delete product
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
@@ -93,6 +101,7 @@ function Admin() {
     }
   };
 
+  // Edit product
   const handleEdit = (product) => {
     setForm({
       name: product.name,
@@ -103,7 +112,8 @@ function Admin() {
     setEditingId(product._id);
   };
 
-  const getImageUrl = (img) => (img ? `${API_URL}/${img.replace(/^\/+/, "")}` : "");
+  // Fix image URL for preview
+  const getImageUrl = (img) => (img ? `${API_URL}/${img}` : "");
 
   return (
     <div className="p-6">
@@ -123,9 +133,7 @@ function Admin() {
         className="space-y-3 mb-6 border p-4 rounded shadow-md bg-gray-50"
       >
         <div>
-          <label htmlFor="name" className="block font-medium">
-            Product Name
-          </label>
+          <label htmlFor="name" className="block font-medium">Product Name</label>
           <input
             id="name"
             type="text"
@@ -140,9 +148,7 @@ function Admin() {
         </div>
 
         <div>
-          <label htmlFor="description" className="block font-medium">
-            Description
-          </label>
+          <label htmlFor="description" className="block font-medium">Description</label>
           <input
             id="description"
             type="text"
@@ -157,9 +163,7 @@ function Admin() {
         </div>
 
         <div>
-          <label htmlFor="price" className="block font-medium">
-            Price
-          </label>
+          <label htmlFor="price" className="block font-medium">Price</label>
           <input
             id="price"
             type="number"
@@ -173,9 +177,7 @@ function Admin() {
         </div>
 
         <div>
-          <label htmlFor="image" className="block font-medium">
-            Product Image
-          </label>
+          <label htmlFor="image" className="block font-medium">Product Image</label>
           <input
             id="image"
             type="file"
@@ -230,10 +232,7 @@ function Admin() {
               </td>
               <td className="border px-4 py-2 space-x-2">
                 <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleEdit(p);
-                  }}
+                  onClick={(e) => { e.preventDefault(); handleEdit(p); }}
                   className="bg-yellow-500 text-white px-3 py-1 rounded"
                 >
                   Edit

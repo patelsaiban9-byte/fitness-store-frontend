@@ -23,9 +23,10 @@ function Product() {
     fetchProducts();
   }, []);
 
-  // Fix image URL
+  // Fix image URL for proper display
   const getImageUrl = (img) => {
     if (!img) return "";
+    // Ensure no leading slashes and prepend API_URL
     return `${API_URL}/${img.replace(/^\/+/, "")}`;
   };
 
