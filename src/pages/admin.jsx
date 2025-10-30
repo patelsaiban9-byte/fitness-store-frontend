@@ -1,6 +1,29 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
+// Helper component for the Bootstrap Toast
+const Toast = ({ message, type, show, onClose }) => {
+  if (!show) return null;
+
+  // Map type to Bootstrap class
+  const alertClass = {
+    success: 'alert-success',
+    danger: 'alert-danger',
+    warning: 'alert-warning',
+  }[type] || 'alert-info';
+
+  return (
+    <div
+      className={`alert ${alertClass} alert-dismissible fade show fixed-top mx-auto mt-3`}
+      role="alert"
+      style={{ width: '90%', maxWidth: '500px', zIndex: 1050 }}
+    >
+      {message}
+      <button type="button" className="btn-close" onClick={onClose} aria-label="Close"></button>
+    </div>
+  );
+};
+
 function Admin() {
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState({
@@ -10,8 +33,20 @@ function Admin() {
     image: "",
   });
   const [editingId, setEditingId] = useState(null);
+  
+  // State for the new Toast notification system
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+  // Function to show toast message
+  const showToast = (message, type = 'info') => {
+    setToast({ show: true, message, type });
+    // Hide toast after 3 seconds
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: 'info' });
+    }, 3000);
+  };
 
   // Fetch products
   const fetchProducts = async () => {
@@ -21,6 +56,7 @@ function Admin() {
       setProducts(data);
     } catch (error) {
       console.error("Error fetching products:", error);
+      showToast("Failed to fetch products.", "danger");
     }
   };
 
@@ -48,19 +84,21 @@ function Admin() {
       if (res.ok || res.status === 200) {
         // Replace preview with server URL after upload
         setForm({ ...form, image: data.imageUrl.replace(/^\/+/, "") });
+        showToast("Image uploaded successfully!", "success");
       } else {
-        alert(data.message || "Upload failed");
+        showToast(data.message || "Image upload failed.", "danger");
       }
     } catch (err) {
       console.error("Upload error:", err);
+      showToast("An error occurred during image upload.", "danger");
     }
   };
 
   // Add or update product
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.image) {
-      alert("Please upload an image first");
+    if (!form.image && !editingId) {
+      showToast("Please upload an image first.", "warning");
       return;
     }
 
@@ -77,13 +115,18 @@ function Admin() {
       });
 
       if (res.ok || res.status === 200 || res.status === 201) {
-        alert(editingId ? "Product updated!" : "Product added!");
+        showToast(editingId ? "Product updated successfully!" : "Product added successfully!", "success");
         setForm({ name: "", description: "", price: "", image: "" });
         setEditingId(null);
         fetchProducts();
+      } else {
+         const errorData = await res.json();
+         console.error("API error:", errorData);
+         showToast(errorData.message || `Error saving product: ${res.statusText}`, "danger");
       }
     } catch (error) {
       console.error("Error saving product:", error);
+      showToast("An error occurred while saving the product.", "danger");
     }
   };
 
@@ -93,11 +136,16 @@ function Admin() {
     try {
       const res = await fetch(`${API_URL}/api/products/${id}`, { method: "DELETE" });
       if (res.ok) {
-        alert("Product deleted!");
+        showToast("Product deleted successfully!", "success");
         fetchProducts();
+      } else {
+         const errorData = await res.json();
+         console.error("API error:", errorData);
+         showToast(errorData.message || `Error deleting product: ${res.statusText}`, "danger");
       }
     } catch (error) {
       console.error("Error deleting product:", error);
+      showToast("An error occurred while deleting the product.", "danger");
     }
   };
 
@@ -110,144 +158,174 @@ function Admin() {
       image: product.image,
     });
     setEditingId(product._id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Fix image URL
   const getImageUrl = (img) => (img ? `${API_URL}/${img.replace(/^\/+/, "")}` : "");
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6 text-center">🛒 Admin Dashboard</h1>
+    <div className="container py-4">
+      {/* Toast Notification */}
+      <Toast 
+        message={toast.message} 
+        type={toast.type} 
+        show={toast.show} 
+        onClose={() => setToast({ ...toast, show: false })} 
+      />
+
+      <h1 className="text-center mb-4">🛒 **Admin Dashboard**</h1>
 
       {/* Orders Link */}
-      <div className="mb-6 text-center">
+      <div className="text-center mb-4">
         <Link
           to="/admin/orders"
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          className="btn btn-success"
         >
           📦 View All Orders
         </Link>
       </div>
 
       {/* Add / Update Product Form */}
-      <form onSubmit={handleSubmit} className="space-y-3 mb-6 border p-4 rounded shadow-md bg-gray-50">
-        <div>
-          <label htmlFor="name" className="block font-medium">Product Name</label>
-          <input
-            id="name"
-            type="text"
-            name="name"
-            placeholder="Product Name"
-            value={form.name}
-            onChange={handleChange}
-            className="border p-2 w-full rounded"
-            required
-            autoComplete="off"
-          />
-        </div>
+      <div className="card shadow-sm mb-4">
+        <div className="card-body">
+          <h2 className="card-title">{editingId ? "✏️ Edit Product" : "➕ Add New Product"}</h2>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-3">
+              <label htmlFor="name" className="form-label">Product Name</label>
+              <input
+                id="name"
+                type="text"
+                name="name"
+                placeholder="Product Name"
+                value={form.name}
+                onChange={handleChange}
+                className="form-control"
+                required
+                autoComplete="off"
+              />
+            </div>
 
-        <div>
-          <label htmlFor="description" className="block font-medium">Description</label>
-          <input
-            id="description"
-            type="text"
-            name="description"
-            placeholder="Description"
-            value={form.description}
-            onChange={handleChange}
-            className="border p-2 w-full rounded"
-            required
-            autoComplete="off"
-          />
-        </div>
+            <div className="mb-3">
+              <label htmlFor="description" className="form-label">Description</label>
+              <input
+                id="description"
+                type="text"
+                name="description"
+                placeholder="Description"
+                value={form.description}
+                onChange={handleChange}
+                className="form-control"
+                required
+                autoComplete="off"
+              />
+            </div>
 
-        <div>
-          <label htmlFor="price" className="block font-medium">Price</label>
-          <input
-            id="price"
-            type="number"
-            name="price"
-            placeholder="Price"
-            value={form.price}
-            onChange={handleChange}
-            className="border p-2 w-full rounded"
-            required
-          />
-        </div>
+            <div className="mb-3">
+              <label htmlFor="price" className="form-label">Price</label>
+              <input
+                id="price"
+                type="number"
+                name="price"
+                placeholder="Price"
+                value={form.price}
+                onChange={handleChange}
+                className="form-control"
+                required
+              />
+            </div>
 
-        <div>
-          <label htmlFor="image" className="block font-medium">Product Image</label>
-          <input
-            id="image"
-            type="file"
-            name="image"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="border p-2 w-full rounded"
-            required={!editingId}
-          />
-          {form.image && (
-            <img
-              src={getImageUrl(form.image)}
-              alt="preview"
-              className="h-12 w-12 mt-2 rounded object-cover border"
-            />
-          )}
-        </div>
+            <div className="mb-3">
+              <label htmlFor="image" className="form-label">Product Image</label>
+              <input
+                id="image"
+                type="file"
+                name="image"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="form-control"
+                required={!editingId && !form.image} // Only required if adding AND no image is set
+              />
+              {form.image && (
+                <img
+                  src={getImageUrl(form.image)}
+                  alt="preview"
+                  className="img-thumbnail mt-2"
+                  style={{ height: '60px', width: '60px', objectFit: 'cover' }}
+                />
+              )}
+            </div>
 
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded w-full"
-        >
-          {editingId ? "✏️ Update Product" : "➕ Add Product"}
-        </button>
-      </form>
+            <button
+              type="submit"
+              className="btn btn-primary w-100"
+            >
+              {editingId ? "✏️ Update Product" : "➕ Add Product"}
+            </button>
+            {editingId && (
+                <button
+                    type="button"
+                    className="btn btn-secondary w-100 mt-2"
+                    onClick={() => {
+                        setEditingId(null);
+                        setForm({ name: "", description: "", price: "", image: "" });
+                    }}
+                >
+                    Cancel Edit
+                </button>
+            )}
+          </form>
+        </div>
+      </div>
 
       {/* Product List */}
-      <h2 className="text-xl font-semibold mb-3">All Products</h2>
-      <table className="table-auto border-collapse border border-gray-300 w-full">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="border px-4 py-2">Name</th>
-            <th className="border px-4 py-2">Description</th>
-            <th className="border px-4 py-2">Price</th>
-            <th className="border px-4 py-2">Image</th>
-            <th className="border px-4 py-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((p) => (
-            <tr key={p._id} className="text-center">
-              <td className="border px-4 py-2">{p.name}</td>
-              <td className="border px-4 py-2">{p.description}</td>
-              <td className="border px-4 py-2">₹{p.price}</td>
-              <td className="border px-4 py-2">
-                {p.image && (
-                  <img
-                    src={getImageUrl(p.image)}
-                    alt={p.name}
-                    className="h-8 w-8 mx-auto rounded object-cover border"
-                  />
-                )}
-              </td>
-              <td className="border px-4 py-2 space-x-2">
-                <button
-                  onClick={(e) => { e.preventDefault(); handleEdit(p); }}
-                  className="bg-yellow-500 text-white px-3 py-1 rounded"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(p._id)}
-                  className="bg-red-500 text-white px-3 py-1 rounded"
-                >
-                  Delete
-                </button>
-              </td>
+      <h2 className="mb-3">All Products</h2>
+      <div className="table-responsive">
+        <table className="table table-bordered table-hover align-middle">
+          <thead className="table-light">
+            <tr className="text-center">
+              <th>Name</th>
+              <th>Description</th>
+              <th>Price</th>
+              <th>Image</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {products.map((p) => (
+              <tr key={p._id} className="text-center">
+                <td>{p.name}</td>
+                <td>{p.description}</td>
+                <td>₹{p.price}</td>
+                <td>
+                  {p.image && (
+                    <img
+                      src={getImageUrl(p.image)}
+                      alt={p.name}
+                      className="img-thumbnail mx-auto d-block"
+                      style={{ height: '40px', width: '40px', objectFit: 'cover' }}
+                    />
+                  )}
+                </td>
+                <td>
+                  <button
+                    onClick={(e) => { e.preventDefault(); handleEdit(p); }}
+                    className="btn btn-warning btn-sm me-2"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(p._id)}
+                    className="btn btn-danger btn-sm"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

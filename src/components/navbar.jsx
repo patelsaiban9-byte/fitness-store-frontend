@@ -21,20 +21,21 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
 
   return (
     <nav
-      className="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top"
-      style={{ width: "100vw", margin: 0, padding: 0 }}
+      className="navbar navbar-expand-lg navbar-dark bg-primary shadow-lg sticky-top"
+      style={{ zIndex: 1060 }}
     >
-      <div className="d-flex w-100 px-3">
+      {/* 🟢 Using 'container-fluid' ensures the navbar content spans the full viewport width */}
+      <div className="container-fluid px-4">
         <Link
-          className="navbar-brand fw-bold"
+          className="navbar-brand fw-bolder fs-5 d-flex align-items-center"
           to="/"
           onClick={() => setIsOpen(false)}
         >
-          🏋️ Health & Fitness
+          <span className="text-warning me-2 fs-4">💪</span> Health & Fitness Store
         </Link>
 
         <button
-          className="navbar-toggler ms-auto"
+          className="navbar-toggler"
           type="button"
           onClick={toggleNavbar}
           aria-controls="navbarNav"
@@ -48,12 +49,12 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
           className={`collapse navbar-collapse ${isOpen ? "show" : ""}`}
           id="navbarNav"
         >
-          <ul className="navbar-nav ms-auto text-center w-100 justify-content-end">
+          <ul className="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
             {isLoggedIn && (
               <>
                 <li className="nav-item">
                   <Link
-                    className="nav-link"
+                    className="nav-link text-white text-uppercase fw-semibold mx-1"
                     to="/"
                     onClick={() => setIsOpen(false)}
                   >
@@ -62,7 +63,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                 </li>
                 <li className="nav-item">
                   <Link
-                    className="nav-link"
+                    className="nav-link text-white text-uppercase fw-semibold mx-1"
                     to="/products"
                     onClick={() => setIsOpen(false)}
                   >
@@ -71,7 +72,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                 </li>
                 <li className="nav-item">
                   <Link
-                    className="nav-link"
+                    className="nav-link text-white text-uppercase fw-semibold mx-1"
                     to="/about"
                     onClick={() => setIsOpen(false)}
                   >
@@ -81,30 +82,22 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
 
                 {userRole === "admin" && (
                   <>
-                    <li className="nav-item">
+                    <li className="nav-item me-lg-2">
                       <Link
-                        className="nav-link"
+                        className="nav-link text-warning fw-bolder mx-1"
                         to="/admin"
                         onClick={() => setIsOpen(false)}
                       >
-                        Admin Dashboard
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link
-                        className="nav-link"
-                        to="/admin/orders"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        View Orders
+                        <i className="bi bi-gear-fill me-1"></i> Admin
                       </Link>
                     </li>
                   </>
                 )}
+                {/* 🛒 Cart option has been removed from here as requested */}
 
                 <li className="nav-item mt-2 mt-lg-0">
                   <button
-                    className="btn btn-danger ms-lg-3 w-100"
+                    className="btn btn-danger fw-bold ms-lg-3 w-100"
                     onClick={handleLogout}
                   >
                     Logout
@@ -116,7 +109,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
             {!isLoggedIn && (
               <li className="nav-item mt-2 mt-lg-0">
                 <Link
-                  className="btn btn-success ms-lg-3 w-100"
+                  className="btn btn-warning fw-bold text-dark ms-lg-3 w-100"
                   to="/login"
                   onClick={() => setIsOpen(false)}
                 >
