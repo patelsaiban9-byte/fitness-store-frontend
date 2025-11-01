@@ -24,7 +24,6 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
       className="navbar navbar-expand-lg navbar-dark bg-primary shadow-lg sticky-top"
       style={{ zIndex: 1060 }}
     >
-      {/* 🟢 Using 'container-fluid' ensures the navbar content spans the full viewport width */}
       <div className="container-fluid px-4">
         <Link
           className="navbar-brand fw-bolder fs-5 d-flex align-items-center"
@@ -91,9 +90,19 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                         <i className="bi bi-gear-fill me-1"></i> Admin
                       </Link>
                     </li>
+
+                    {/* 🟢 NEW: User Reports link for admin */}
+                    <li className="nav-item me-lg-2">
+                      <Link
+                        className="nav-link text-warning fw-bolder mx-1"
+                        to="/admin/reports"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <i className="bi bi-bar-chart-fill me-1"></i> Reports
+                      </Link>
+                    </li>
                   </>
                 )}
-                {/* 🛒 Cart option has been removed from here as requested */}
 
                 <li className="nav-item mt-2 mt-lg-0">
                   <button

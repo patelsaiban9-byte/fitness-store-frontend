@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
-// Helper component for the Bootstrap Toast (omitted for brevity, assume it's here)
+// Helper component for the Bootstrap Toast (assuming it's defined elsewhere or imported)
 const Toast = ({ message, type, show, onClose }) => {
   // ... (Toast component implementation)
   if (!show) return null;
@@ -85,7 +85,7 @@ function Login({ setIsLoggedIn, setUserRole }) {
   };
 
   return (
-    // ✅ This is the correct combination of Bootstrap classes for perfect center alignment
+    // ⚠️ THIS IS THE CORRECT CENTERING CODE
     <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
       
       {/* Toast Notification */}
@@ -100,7 +100,7 @@ function Login({ setIsLoggedIn, setUserRole }) {
         className="card shadow-lg border-0 p-4 w-100"
         style={{ maxWidth: "420px" }}
       >
-        <h3 className="text-center mb-4 fw-bold text-primary">🔐 Login</h3>
+        <h3 className="text-center mb-4 fw-bold text-primary">🔐 Welcome Back!</h3>
 
         {error && (
           <div className="alert alert-danger text-center">{error}</div>
@@ -108,7 +108,7 @@ function Login({ setIsLoggedIn, setUserRole }) {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label className="form-label fw-semibold">Email</label>
+            <label className="form-label fw-semibold">Email Address</label>
             <input
               type="email"
               className="form-control form-control-lg"
@@ -132,17 +132,17 @@ function Login({ setIsLoggedIn, setUserRole }) {
           </div>
 
           <button type="submit" className="btn btn-primary btn-lg w-100">
-            Login
+            Sign In
           </button>
         </form>
 
         <p className="mt-3 text-center">
-          Don’t have an account?{" "}
+          New user?{" "}
           <Link
             to="/register"
             className="fw-semibold text-decoration-none text-primary"
           >
-            Register here
+            Create an Account
           </Link>
         </p>
       </div>

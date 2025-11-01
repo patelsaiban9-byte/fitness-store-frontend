@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 const Toast = ({ message, type, show, onClose }) => {
   if (!show) return null;
 
-  // Map type to Bootstrap class
   const alertClass = {
     success: 'alert-success',
     danger: 'alert-danger',
@@ -33,22 +32,15 @@ function Admin() {
     image: "",
   });
   const [editingId, setEditingId] = useState(null);
-  
-  // State for the new Toast notification system
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-  // Function to show toast message
   const showToast = (message, type = 'info') => {
     setToast({ show: true, message, type });
-    // Hide toast after 3 seconds
-    setTimeout(() => {
-      setToast({ show: false, message: '', type: 'info' });
-    }, 3000);
+    setTimeout(() => setToast({ show: false, message: '', type: 'info' }), 3000);
   };
 
-  // Fetch products
   const fetchProducts = async () => {
     try {
       const res = await fetch(`${API_URL}/api/products`);
@@ -66,12 +58,10 @@ function Admin() {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  // Image upload with instant preview
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Show local preview immediately
     const localPreview = URL.createObjectURL(file);
     setForm({ ...form, image: localPreview });
 
@@ -82,7 +72,6 @@ function Admin() {
       const res = await fetch(`${API_URL}/api/upload`, { method: "POST", body: formData });
       const data = await res.json();
       if (res.ok || res.status === 200) {
-        // Replace preview with server URL after upload
         setForm({ ...form, image: data.imageUrl.replace(/^\/+/, "") });
         showToast("Image uploaded successfully!", "success");
       } else {
@@ -94,7 +83,6 @@ function Admin() {
     }
   };
 
-  // Add or update product
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.image && !editingId) {
@@ -120,9 +108,9 @@ function Admin() {
         setEditingId(null);
         fetchProducts();
       } else {
-         const errorData = await res.json();
-         console.error("API error:", errorData);
-         showToast(errorData.message || `Error saving product: ${res.statusText}`, "danger");
+        const errorData = await res.json();
+        console.error("API error:", errorData);
+        showToast(errorData.message || `Error saving product: ${res.statusText}`, "danger");
       }
     } catch (error) {
       console.error("Error saving product:", error);
@@ -130,7 +118,6 @@ function Admin() {
     }
   };
 
-  // Delete product
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
@@ -139,9 +126,9 @@ function Admin() {
         showToast("Product deleted successfully!", "success");
         fetchProducts();
       } else {
-         const errorData = await res.json();
-         console.error("API error:", errorData);
-         showToast(errorData.message || `Error deleting product: ${res.statusText}`, "danger");
+        const errorData = await res.json();
+        console.error("API error:", errorData);
+        showToast(errorData.message || `Error deleting product: ${res.statusText}`, "danger");
       }
     } catch (error) {
       console.error("Error deleting product:", error);
@@ -149,7 +136,6 @@ function Admin() {
     }
   };
 
-  // Edit product
   const handleEdit = (product) => {
     setForm({
       name: product.name,
@@ -161,35 +147,36 @@ function Admin() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Fix image URL
   const getImageUrl = (img) => (img ? `${API_URL}/${img.replace(/^\/+/, "")}` : "");
 
   return (
     <div className="container py-4">
       {/* Toast Notification */}
-      <Toast 
-        message={toast.message} 
-        type={toast.type} 
-        show={toast.show} 
-        onClose={() => setToast({ ...toast, show: false })} 
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        show={toast.show}
+        onClose={() => setToast({ ...toast, show: false })}
       />
 
-      <h1 className="text-center mb-4">🛒 **Admin Dashboard**</h1>
+      <h1 className="text-center mb-4">🛒 <strong>Admin Dashboard</strong></h1>
 
-      {/* Orders Link */}
-      <div className="text-center mb-4">
-        <Link
-          to="/admin/orders"
-          className="btn btn-success"
-        >
+      {/* Orders + Reports Links */}
+      <div className="text-center mb-4 d-flex justify-content-center gap-3 flex-wrap">
+        <Link to="/admin/orders" className="btn btn-success">
           📦 View All Orders
+        </Link>
+        <Link to="/admin/reports" className="btn btn-info text-white">
+          📊 View User Reports
         </Link>
       </div>
 
       {/* Add / Update Product Form */}
       <div className="card shadow-sm mb-4">
         <div className="card-body">
-          <h2 className="card-title">{editingId ? "✏️ Edit Product" : "➕ Add New Product"}</h2>
+          <h2 className="card-title">
+            {editingId ? "✏️ Edit Product" : "➕ Add New Product"}
+          </h2>
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
               <label htmlFor="name" className="form-label">Product Name</label>
@@ -244,7 +231,7 @@ function Admin() {
                 accept="image/*"
                 onChange={handleImageUpload}
                 className="form-control"
-                required={!editingId && !form.image} // Only required if adding AND no image is set
+                required={!editingId && !form.image}
               />
               {form.image && (
                 <img
@@ -256,23 +243,21 @@ function Admin() {
               )}
             </div>
 
-            <button
-              type="submit"
-              className="btn btn-primary w-100"
-            >
+            <button type="submit" className="btn btn-primary w-100">
               {editingId ? "✏️ Update Product" : "➕ Add Product"}
             </button>
+
             {editingId && (
-                <button
-                    type="button"
-                    className="btn btn-secondary w-100 mt-2"
-                    onClick={() => {
-                        setEditingId(null);
-                        setForm({ name: "", description: "", price: "", image: "" });
-                    }}
-                >
-                    Cancel Edit
-                </button>
+              <button
+                type="button"
+                className="btn btn-secondary w-100 mt-2"
+                onClick={() => {
+                  setEditingId(null);
+                  setForm({ name: "", description: "", price: "", image: "" });
+                }}
+              >
+                Cancel Edit
+              </button>
             )}
           </form>
         </div>

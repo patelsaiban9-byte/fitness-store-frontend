@@ -8,6 +8,7 @@ import AdminOrders from "./pages/adminorder";
 import OrderForm from "./pages/orderform";
 import Register from "./pages/register";
 import About from "./pages/about";
+import UserReports from "./pages/UserReports"; // ✅ Add this line
 
 import { useState, useEffect } from "react";
 
@@ -118,6 +119,16 @@ function App() {
             element={
               <AdminRoute isLoggedIn={isLoggedIn} userRole={userRole}>
                 <AdminOrders />
+              </AdminRoute>
+            }
+          />
+
+          {/* ✅ User Reports Page */}
+          <Route
+            path="/admin/reports"
+            element={
+              <AdminRoute isLoggedIn={isLoggedIn} userRole={userRole}>
+                <UserReports />
               </AdminRoute>
             }
           />
