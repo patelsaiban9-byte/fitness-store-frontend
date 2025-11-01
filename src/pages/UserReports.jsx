@@ -1,35 +1,59 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
 
 const UserReports = () => {
-  const [users, setUsers] = useState([]);
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // ✅ Correct backend route
-    axios.get('https://fitness-store-backend.onrender.com/api/admin/reports')
-      .then(res => setUsers(res.data))
-      .catch(err => console.error(err));
+    const fetchReports = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/admin/reports");
+        const data = await res.json();
+        setReports(data);
+      } catch (err) {
+        console.error("Error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReports();
   }, []);
 
+  if (loading) return <p>Loading...</p>;
+
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">User Reports</h2>
-      <table className="w-full border-collapse border border-gray-300">
-        <thead>
+    <div className="container mt-4">
+      <h2 className="text-center mb-4">User Reports</h2>
+      <table className="table table-bordered text-center">
+        <thead className="table-light">
           <tr>
-            <th className="border p-2">Name</th>
-            <th className="border p-2">Email</th>
-            <th className="border p-2">Registered At</th>
-            <th className="border p-2">Orders</th>
+            <th>User Email</th>
+            <th>Role</th>
+            <th>Total Orders</th>
+            <th>Total Amount (₹)</th>
+            <th>Order Details</th>
           </tr>
         </thead>
         <tbody>
-          {users.map(user => (
-            <tr key={user._id}>
-              <td className="border p-2">{user.name || 'N/A'}</td>
-              <td className="border p-2">{user.email}</td>
-              <td className="border p-2">{new Date(user.createdAt).toLocaleDateString()}</td>
-              <td className="border p-2">{user.orders ? user.orders.length : 0}</td>
+          {reports.map((u) => (
+            <tr key={u._id}>
+              <td>{u.email}</td>
+              <td>{u.role}</td>
+              <td>{u.totalOrders}</td>
+              <td>{u.totalAmount}</td>
+              <td>
+                {u.orders.length > 0 ? (
+                  <ul className="list-unstyled mb-0">
+                    {u.orders.map((o, i) => (
+                      <li key={i}>
+                        {o.productName} - ₹{o.price}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  "No orders"
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

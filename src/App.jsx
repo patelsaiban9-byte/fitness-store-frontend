@@ -8,23 +8,23 @@ import AdminOrders from "./pages/adminorder";
 import OrderForm from "./pages/orderform";
 import Register from "./pages/register";
 import About from "./pages/about";
-import UserReports from "./pages/UserReports"; // ✅ Add this line
+import UserReports from "./pages/UserReports"; // ✅ Added correctly
 
 import { useState, useEffect } from "react";
 
-// Route protection wrappers
+// ✅ Route protection wrappers
 function ProtectedRoute({ isLoggedIn, children }) {
-  if (!isLoggedIn) return <Navigate to="/login" />;
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
   return children;
 }
 
 function AdminRoute({ isLoggedIn, userRole, children }) {
-  if (!isLoggedIn) return <Navigate to="/login" />;
-  if (userRole !== "admin") return <Navigate to="/" />;
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  if (userRole !== "admin") return <Navigate to="/" replace />;
   return children;
 }
 
-// Wrapper to hide Navbar on login/register
+// ✅ Wrapper to hide Navbar on login/register pages
 function Layout({ children, isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
   const location = useLocation();
   const hideNavbar = ["/login", "/register"].includes(location.pathname);
@@ -144,7 +144,7 @@ function App() {
           />
 
           {/* Redirect unknown routes */}
-          <Route path="*" element={<Navigate to={isLoggedIn ? "/" : "/login"} />} />
+          <Route path="*" element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} />
         </Routes>
       </Layout>
     </Router>
