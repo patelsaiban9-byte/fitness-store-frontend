@@ -5,8 +5,8 @@ const UserReports = () => {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    // Fetch user reports from backend
-    axios.get('https://fitness-store-backend.onrender.com/admin/reports')
+    // ✅ Correct backend route
+    axios.get('https://fitness-store-backend.onrender.com/api/admin/reports')
       .then(res => setUsers(res.data))
       .catch(err => console.error(err));
   }, []);
@@ -26,7 +26,7 @@ const UserReports = () => {
         <tbody>
           {users.map(user => (
             <tr key={user._id}>
-              <td className="border p-2">{user.name}</td>
+              <td className="border p-2">{user.name || 'N/A'}</td>
               <td className="border p-2">{user.email}</td>
               <td className="border p-2">{new Date(user.createdAt).toLocaleDateString()}</td>
               <td className="border p-2">{user.orders ? user.orders.length : 0}</td>
