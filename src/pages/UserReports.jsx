@@ -5,18 +5,11 @@ const UserReports = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/admin/reports");
-        const data = await res.json();
-        setReports(data);
-      } catch (err) {
-        console.error("Error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchReports();
+    fetch("http://localhost:5000/api/admin/reports")
+      .then((res) => res.json())
+      .then((data) => setReports(data))
+      .catch((err) => console.error("Error fetching reports:", err))
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) return <p>Loading...</p>;
@@ -28,34 +21,33 @@ const UserReports = () => {
         <thead className="table-light">
           <tr>
             <th>User Email</th>
-            <th>Role</th>
-            <th>Total Orders</th>
-            <th>Total Amount (₹)</th>
+            <th>Order Date</th>
             <th>Order Details</th>
           </tr>
         </thead>
         <tbody>
-          {reports.map((u) => (
-            <tr key={u._id}>
-              <td>{u.email}</td>
-              <td>{u.role}</td>
-              <td>{u.totalOrders}</td>
-              <td>{u.totalAmount}</td>
-              <td>
-                {u.orders.length > 0 ? (
-                  <ul className="list-unstyled mb-0">
-                    {u.orders.map((o, i) => (
-                      <li key={i}>
-                        {o.productName} - ₹{o.price}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  "No orders"
-                )}
-              </td>
+          {reports.length === 0 && (
+            <tr>
+              <td colSpan={3}>No users found</td>
             </tr>
-          ))}
+          )}
+
+          {reports.map((report, index) =>
+            report.orders && report.orders.length > 0 ? (
+              report.orders.map((order, orderIndex) => (
+                <tr key={`${index}-${orderIndex}`}>
+                  <td>{report.email}</td>
+                  <td>{new Date(order.createdAt).toLocaleString()}</td>
+                  <td>{order.product || order.productName || "Unknown"}</td>
+                </tr>
+              ))
+            ) : (
+              <tr key={index}>
+                <td>{report.email}</td>
+                <td colSpan={2}>No Orders Found</td>
+              </tr>
+            )
+          )}
         </tbody>
       </table>
     </div>
