@@ -1,24 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-// Helper component for the Bootstrap Toast
 const Toast = ({ message, type, show, onClose }) => {
   if (!show) return null;
-
   const alertClass = {
-    success: 'alert-success',
-    danger: 'alert-danger',
-    warning: 'alert-warning',
-  }[type] || 'alert-info';
+    success: "alert-success",
+    danger: "alert-danger",
+    warning: "alert-warning",
+  }[type] || "alert-info";
 
   return (
     <div
       className={`alert ${alertClass} alert-dismissible fade show fixed-top mx-auto mt-3`}
       role="alert"
-      style={{ width: '90%', maxWidth: '500px', zIndex: 1050 }}
+      style={{ width: "90%", maxWidth: "500px", zIndex: 1050 }}
     >
       {message}
-      <button type="button" className="btn-close" onClick={onClose} aria-label="Close"></button>
+      <button type="button" className="btn-close" onClick={onClose}></button>
     </div>
   );
 };
@@ -32,13 +30,13 @@ function Admin() {
     image: "",
   });
   const [editingId, setEditingId] = useState(null);
-  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+  const [toast, setToast] = useState({ show: false, message: "", type: "info" });
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-  const showToast = (message, type = 'info') => {
+  const showToast = (message, type = "info") => {
     setToast({ show: true, message, type });
-    setTimeout(() => setToast({ show: false, message: '', type: 'info' }), 3000);
+    setTimeout(() => setToast({ show: false, message: "", type: "info" }), 3000);
   };
 
   const fetchProducts = async () => {
@@ -56,23 +54,27 @@ function Admin() {
     fetchProducts();
   }, []);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
+  // ✅ FIXED IMAGE UPLOAD — stores file permanently in backend/uploads/
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    const localPreview = URL.createObjectURL(file);
-    setForm({ ...form, image: localPreview });
 
     const formData = new FormData();
     formData.append("image", file);
 
     try {
-      const res = await fetch(`${API_URL}/api/upload`, { method: "POST", body: formData });
+      const res = await fetch(`${API_URL}/api/upload`, {
+        method: "POST",
+        body: formData,
+      });
       const data = await res.json();
-      if (res.ok || res.status === 200) {
-        setForm({ ...form, image: data.imageUrl.replace(/^\/+/, "") });
+
+      if (res.ok && data.imageUrl) {
+        // ✅ Save backend file path (not temporary local URL)
+        setForm((prev) => ({ ...prev, image: data.imageUrl }));
         showToast("Image uploaded successfully!", "success");
       } else {
         showToast(data.message || "Image upload failed.", "danger");
@@ -103,14 +105,19 @@ function Admin() {
       });
 
       if (res.ok || res.status === 200 || res.status === 201) {
-        showToast(editingId ? "Product updated successfully!" : "Product added successfully!", "success");
+        showToast(
+          editingId ? "Product updated successfully!" : "Product added successfully!",
+          "success"
+        );
         setForm({ name: "", description: "", price: "", image: "" });
         setEditingId(null);
         fetchProducts();
       } else {
         const errorData = await res.json();
-        console.error("API error:", errorData);
-        showToast(errorData.message || `Error saving product: ${res.statusText}`, "danger");
+        showToast(
+          errorData.message || `Error saving product: ${res.statusText}`,
+          "danger"
+        );
       }
     } catch (error) {
       console.error("Error saving product:", error);
@@ -121,14 +128,18 @@ function Admin() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
-      const res = await fetch(`${API_URL}/api/products/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API_URL}/api/products/${id}`, {
+        method: "DELETE",
+      });
       if (res.ok) {
         showToast("Product deleted successfully!", "success");
         fetchProducts();
       } else {
         const errorData = await res.json();
-        console.error("API error:", errorData);
-        showToast(errorData.message || `Error deleting product: ${res.statusText}`, "danger");
+        showToast(
+          errorData.message || `Error deleting product: ${res.statusText}`,
+          "danger"
+        );
       }
     } catch (error) {
       console.error("Error deleting product:", error);
@@ -144,14 +155,14 @@ function Admin() {
       image: product.image,
     });
     setEditingId(product._id);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const getImageUrl = (img) => (img ? `${API_URL}/${img.replace(/^\/+/, "")}` : "");
+  const getImageUrl = (img) =>
+    img ? `${API_URL}/${img.replace(/^\/+/, "")}` : "";
 
   return (
     <div className="container py-4">
-      {/* Toast Notification */}
       <Toast
         message={toast.message}
         type={toast.type}
@@ -159,9 +170,10 @@ function Admin() {
         onClose={() => setToast({ ...toast, show: false })}
       />
 
-      <h1 className="text-center mb-4">🛒 <strong>Admin Dashboard</strong></h1>
+      <h1 className="text-center mb-4">
+        🛒 <strong>Admin Dashboard</strong>
+      </h1>
 
-      {/* Orders + Reports Links */}
       <div className="text-center mb-4 d-flex justify-content-center gap-3 flex-wrap">
         <Link to="/admin/orders" className="btn btn-success">
           📦 View All Orders
@@ -171,7 +183,6 @@ function Admin() {
         </Link>
       </div>
 
-      {/* Add / Update Product Form */}
       <div className="card shadow-sm mb-4">
         <div className="card-body">
           <h2 className="card-title">
@@ -179,7 +190,9 @@ function Admin() {
           </h2>
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
-              <label htmlFor="name" className="form-label">Product Name</label>
+              <label htmlFor="name" className="form-label">
+                Product Name
+              </label>
               <input
                 id="name"
                 type="text"
@@ -194,7 +207,9 @@ function Admin() {
             </div>
 
             <div className="mb-3">
-              <label htmlFor="description" className="form-label">Description</label>
+              <label htmlFor="description" className="form-label">
+                Description
+              </label>
               <input
                 id="description"
                 type="text"
@@ -209,7 +224,9 @@ function Admin() {
             </div>
 
             <div className="mb-3">
-              <label htmlFor="price" className="form-label">Price</label>
+              <label htmlFor="price" className="form-label">
+                Price
+              </label>
               <input
                 id="price"
                 type="number"
@@ -223,7 +240,9 @@ function Admin() {
             </div>
 
             <div className="mb-3">
-              <label htmlFor="image" className="form-label">Product Image</label>
+              <label htmlFor="image" className="form-label">
+                Product Image
+              </label>
               <input
                 id="image"
                 type="file"
@@ -238,7 +257,7 @@ function Admin() {
                   src={getImageUrl(form.image)}
                   alt="preview"
                   className="img-thumbnail mt-2"
-                  style={{ height: '60px', width: '60px', objectFit: 'cover' }}
+                  style={{ height: "60px", width: "60px", objectFit: "cover" }}
                 />
               )}
             </div>
@@ -253,7 +272,12 @@ function Admin() {
                 className="btn btn-secondary w-100 mt-2"
                 onClick={() => {
                   setEditingId(null);
-                  setForm({ name: "", description: "", price: "", image: "" });
+                  setForm({
+                    name: "",
+                    description: "",
+                    price: "",
+                    image: "",
+                  });
                 }}
               >
                 Cancel Edit
@@ -263,7 +287,6 @@ function Admin() {
         </div>
       </div>
 
-      {/* Product List */}
       <h2 className="mb-3">All Products</h2>
       <div className="table-responsive">
         <table className="table table-bordered table-hover align-middle">
@@ -288,13 +311,16 @@ function Admin() {
                       src={getImageUrl(p.image)}
                       alt={p.name}
                       className="img-thumbnail mx-auto d-block"
-                      style={{ height: '40px', width: '40px', objectFit: 'cover' }}
+                      style={{ height: "40px", width: "40px", objectFit: "cover" }}
                     />
                   )}
                 </td>
                 <td>
                   <button
-                    onClick={(e) => { e.preventDefault(); handleEdit(p); }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleEdit(p);
+                    }}
                     className="btn btn-warning btn-sm me-2"
                   >
                     Edit
