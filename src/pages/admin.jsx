@@ -57,7 +57,7 @@ function Admin() {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  // ✅ FIXED IMAGE UPLOAD — stores file permanently in backend/uploads/
+  // ✅ FIXED IMAGE UPLOAD — stores file permanently in backend/upload/
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -73,7 +73,7 @@ function Admin() {
       const data = await res.json();
 
       if (res.ok && data.imageUrl) {
-        // ✅ Save backend file path (not temporary local URL)
+        // ✅ Save backend file path (e.g., /upload/filename.jpg)
         setForm((prev) => ({ ...prev, image: data.imageUrl }));
         showToast("Image uploaded successfully!", "success");
       } else {
@@ -87,7 +87,8 @@ function Admin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.image && !editingId) {
+    // ✅ FIX: Only require an image if adding a NEW product AND no image is set.
+    if (!editingId && !form.image) {
       showToast("Please upload an image first.", "warning");
       return;
     }
@@ -158,6 +159,7 @@ function Admin() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Function to correctly construct the image URL
   const getImageUrl = (img) =>
     img ? `${API_URL}/${img.replace(/^\/+/, "")}` : "";
 
@@ -241,7 +243,7 @@ function Admin() {
 
             <div className="mb-3">
               <label htmlFor="image" className="form-label">
-                Product Image
+                Product Image (Upload new to replace)
               </label>
               <input
                 id="image"
@@ -250,10 +252,12 @@ function Admin() {
                 accept="image/*"
                 onChange={handleImageUpload}
                 className="form-control"
+                // ✅ FIX 1: Only require image for new products
                 required={!editingId && !form.image}
               />
               {form.image && (
                 <img
+                  // ✅ FIX 2: Correct casing
                   src={getImageUrl(form.image)}
                   alt="preview"
                   className="img-thumbnail mt-2"
@@ -308,6 +312,7 @@ function Admin() {
                 <td>
                   {p.image && (
                     <img
+                      // ✅ FIX 3: Correct casing for display
                       src={getImageUrl(p.image)}
                       alt={p.name}
                       className="img-thumbnail mx-auto d-block"

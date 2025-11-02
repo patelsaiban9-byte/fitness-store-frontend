@@ -1,92 +1,333 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
-function AdminOrders() {
-  const [orders, setOrders] = useState([]);
-  const API_URL = import.meta.env.VITE_API_URL;
+const Toast = ({ message, type, show, onClose }) => {
+  if (!show) return null;
+  const alertClass = {
+    success: "alert-success",
+    danger: "alert-danger",
+    warning: "alert-warning",
+  }[type] || "alert-info";
 
-  // Fetch all orders from backend
-  const fetchOrders = async () => {
+  return (
+    <div
+      className={`alert ${alertClass} alert-dismissible fade show fixed-top mx-auto mt-3`}
+      role="alert"
+      style={{ width: "90%", maxWidth: "500px", zIndex: 1050 }}
+    >
+      {message}
+      <button type="button" className="btn-close" onClick={onClose}></button>
+    </div>
+  );
+};
+
+function Admin() {
+  const [products, setProducts] = useState([]);
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    price: "",
+    image: "",
+  });
+  const [editingId, setEditingId] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: "", type: "info" });
+
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+  const showToast = (message, type = "info") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: "", type: "info" }), 3000);
+  };
+
+  const fetchProducts = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/orders`);
+      const res = await fetch(`${API_URL}/api/products`);
       const data = await res.json();
-      setOrders(data);
-    } catch (err) {
-      console.error("Error fetching orders:", err);
+      setProducts(data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      showToast("Failed to fetch products.", "danger");
     }
   };
 
   useEffect(() => {
-    fetchOrders();
+    fetchProducts();
   }, []);
 
-  // Delete order
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this order?")) return;
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
+
+  // ✅ FIXED IMAGE UPLOAD — stores file permanently in backend/uploads/
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
 
     try {
-      const res = await fetch(`${API_URL}/api/orders/${id}`, {
-        method: "DELETE",
+      const res = await fetch(`${API_URL}/api/upload`, {
+        method: "POST",
+        body: formData,
       });
-
       const data = await res.json();
-      if (res.ok) {
-        alert(data.message || "Order deleted");
-        fetchOrders(); // refresh list
+
+      if (res.ok && data.imageUrl) {
+        // ✅ Save backend file path (not temporary local URL)
+        setForm((prev) => ({ ...prev, image: data.imageUrl }));
+        showToast("Image uploaded successfully!", "success");
       } else {
-        alert(data.error || "Failed to delete order");
+        showToast(data.message || "Image upload failed.", "danger");
       }
     } catch (err) {
-      console.error("Error deleting order:", err);
-      alert("Something went wrong. Please try again.");
+      console.error("Upload error:", err);
+      showToast("An error occurred during image upload.", "danger");
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.image && !editingId) {
+      showToast("Please upload an image first.", "warning");
+      return;
+    }
+
+    try {
+      const url = editingId
+        ? `${API_URL}/api/products/${editingId}`
+        : `${API_URL}/api/products`;
+      const method = editingId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      if (res.ok || res.status === 200 || res.status === 201) {
+        showToast(
+          editingId ? "Product updated successfully!" : "Product added successfully!",
+          "success"
+        );
+        setForm({ name: "", description: "", price: "", image: "" });
+        setEditingId(null);
+        fetchProducts();
+      } else {
+        const errorData = await res.json();
+        showToast(
+          errorData.message || `Error saving product: ${res.statusText}`,
+          "danger"
+        );
+      }
+    } catch (error) {
+      console.error("Error saving product:", error);
+      showToast("An error occurred while saving the product.", "danger");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this product?")) return;
+    try {
+      const res = await fetch(`${API_URL}/api/products/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        showToast("Product deleted successfully!", "success");
+        fetchProducts();
+      } else {
+        const errorData = await res.json();
+        showToast(
+          errorData.message || `Error deleting product: ${res.statusText}`,
+          "danger"
+        );
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      showToast("An error occurred while deleting the product.", "danger");
+    }
+  };
+
+  const handleEdit = (product) => {
+    setForm({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      image: product.image,
+    });
+    setEditingId(product._id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const getImageUrl = (img) =>
+    img ? `${API_URL}/${img.replace(/^\/+/, "")}` : "";
+
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>📦 All Orders</h1>
-      {orders.length === 0 ? (
-        <p>No orders found.</p>
-      ) : (
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            marginTop: "20px",
-          }}
-        >
-          <thead>
-            <tr style={{ backgroundColor: "#f0f0f0" }}>
-              <th style={{ border: "1px solid #ccc", padding: "8px" }}>Name</th>
-              <th style={{ border: "1px solid #ccc", padding: "8px" }}>Address</th>
-              <th style={{ border: "1px solid #ccc", padding: "8px" }}>Phone</th>
-              <th style={{ border: "1px solid #ccc", padding: "8px" }}>Product</th>
-              <th style={{ border: "1px solid #ccc", padding: "8px" }}>Price</th>
-              <th style={{ border: "1px solid #ccc", padding: "8px" }}>Actions</th>
+    <div className="container py-4">
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        show={toast.show}
+        onClose={() => setToast({ ...toast, show: false })}
+      />
+
+      <h1 className="text-center mb-4">
+        🛒 <strong>Admin Dashboard</strong>
+      </h1>
+
+      <div className="text-center mb-4 d-flex justify-content-center gap-3 flex-wrap">
+        <Link to="/admin/orders" className="btn btn-success">
+          📦 View All Orders
+        </Link>
+        <Link to="/admin/reports" className="btn btn-info text-white">
+          📊 View User Reports
+        </Link>
+      </div>
+
+      <div className="card shadow-sm mb-4">
+        <div className="card-body">
+          <h2 className="card-title">
+            {editingId ? "✏️ Edit Product" : "➕ Add New Product"}
+          </h2>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-3">
+              <label htmlFor="name" className="form-label">
+                Product Name
+              </label>
+              <input
+                id="name"
+                type="text"
+                name="name"
+                placeholder="Product Name"
+                value={form.name}
+                onChange={handleChange}
+                className="form-control"
+                required
+                autoComplete="off"
+              />
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="description" className="form-label">
+                Description
+              </label>
+              <input
+                id="description"
+                type="text"
+                name="description"
+                placeholder="Description"
+                value={form.description}
+                onChange={handleChange}
+                className="form-control"
+                required
+                autoComplete="off"
+              />
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="price" className="form-label">
+                Price
+              </label>
+              <input
+                id="price"
+                type="number"
+                name="price"
+                placeholder="Price"
+                value={form.price}
+                onChange={handleChange}
+                className="form-control"
+                required
+              />
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="image" className="form-label">
+                Product Image
+              </label>
+              <input
+                id="image"
+                type="file"
+                name="image"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="form-control"
+                required={!editingId && !form.image}
+              />
+              {form.image && (
+                <img
+                  src={getImageUrl(form.image)}
+                  alt="preview"
+                  className="img-thumbnail mt-2"
+                  style={{ height: "60px", width: "60px", objectFit: "cover" }}
+                />
+              )}
+            </div>
+
+            <button type="submit" className="btn btn-primary w-100">
+              {editingId ? "✏️ Update Product" : "➕ Add Product"}
+            </button>
+
+            {editingId && (
+              <button
+                type="button"
+                className="btn btn-secondary w-100 mt-2"
+                onClick={() => {
+                  setEditingId(null);
+                  setForm({
+                    name: "",
+                    description: "",
+                    price: "",
+                    image: "",
+                  });
+                }}
+              >
+                Cancel Edit
+              </button>
+            )}
+          </form>
+        </div>
+      </div>
+
+      <h2 className="mb-3">All Products</h2>
+      <div className="table-responsive">
+        <table className="table table-bordered table-hover align-middle">
+          <thead className="table-light">
+            <tr className="text-center">
+              <th>Name</th>
+              <th>Description</th>
+              <th>Price</th>
+              <th>Image</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {orders.map((order) => (
-              <tr key={order._id} style={{ textAlign: "center" }}>
-                <td style={{ border: "1px solid #ccc", padding: "8px" }}>{order.name}</td>
-                <td style={{ border: "1px solid #ccc", padding: "8px" }}>{order.address}</td>
-                <td style={{ border: "1px solid #ccc", padding: "8px" }}>{order.phone}</td>
-                <td style={{ border: "1px solid #ccc", padding: "8px" }}>
-                  {order.productId ? order.productId.name : "Product deleted"}
+            {products.map((p) => (
+              <tr key={p._id} className="text-center">
+                <td>{p.name}</td>
+                <td>{p.description}</td>
+                <td>₹{p.price}</td>
+                <td>
+                  {p.image && (
+                    <img
+                      src={getImageUrl(p.image)}
+                      alt={p.name}
+                      className="img-thumbnail mx-auto d-block"
+                      style={{ height: "40px", width: "40px", objectFit: "cover" }}
+                    />
+                  )}
                 </td>
-                <td style={{ border: "1px solid #ccc", padding: "8px" }}>
-                  {order.productId ? `₹${order.productId.price}` : "-"}
-                </td>
-                <td style={{ border: "1px solid #ccc", padding: "8px" }}>
+                <td>
                   <button
-                    onClick={() => handleDelete(order._id)}
-                    style={{
-                      padding: "5px 10px",
-                      backgroundColor: "red",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "5px",
-                      cursor: "pointer",
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleEdit(p);
                     }}
+                    className="btn btn-warning btn-sm me-2"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(p._id)}
+                    className="btn btn-danger btn-sm"
                   >
                     Delete
                   </button>
@@ -95,9 +336,9 @@ function AdminOrders() {
             ))}
           </tbody>
         </table>
-      )}
+      </div>
     </div>
   );
 }
 
-export default AdminOrders;
+export default Admin;
