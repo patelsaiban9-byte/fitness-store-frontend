@@ -21,10 +21,10 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
 
   return (
     <nav
-      className="navbar navbar-expand-lg navbar-dark bg-primary shadow-lg sticky-top"
-      style={{ zIndex: 1060 }}
+      className="navbar navbar-expand-lg navbar-dark bg-primary shadow-lg sticky-top w-100"
+      style={{ zIndex: 1060, width: "100%", margin: 0, padding: 0 }}
     >
-      <div className="container-fluid px-4">
+      <div className="container-fluid px-3 px-md-4" style={{ width: "100%", maxWidth: "100%" }}>
         <Link
           className="navbar-brand fw-bolder fs-5 d-flex align-items-center"
           to="/"
@@ -48,7 +48,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
           className={`collapse navbar-collapse ${isOpen ? "show" : ""}`}
           id="navbarNav"
         >
-          <ul className="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+          <ul className="navbar-nav ms-auto mb-0 align-items-center">
             {isLoggedIn && (
               <>
                 <li className="nav-item">
@@ -104,10 +104,11 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                   </>
                 )}
 
-                <li className="nav-item mt-2 mt-lg-0">
+                <li className="nav-item">
                   <button
-                    className="btn btn-danger fw-bold ms-lg-3 w-100"
+                    className="btn btn-danger fw-bold ms-lg-2 px-3"
                     onClick={handleLogout}
+                    style={{ whiteSpace: "nowrap" }}
                   >
                     Logout
                   </button>
@@ -116,11 +117,12 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
             )}
 
             {!isLoggedIn && (
-              <li className="nav-item mt-2 mt-lg-0">
+              <li className="nav-item">
                 <Link
-                  className="btn btn-warning fw-bold text-dark ms-lg-3 w-100"
+                  className="btn btn-warning fw-bold text-dark ms-lg-2 px-3"
                   to="/login"
                   onClick={() => setIsOpen(false)}
+                  style={{ whiteSpace: "nowrap" }}
                 >
                   Login
                 </Link>

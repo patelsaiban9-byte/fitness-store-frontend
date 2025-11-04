@@ -47,15 +47,66 @@ function Layout({ children, isLoggedIn, userRole, setIsLoggedIn, setUserRole }) 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Loading state
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
-    if (token && role) {
-      setIsLoggedIn(true);
-      setUserRole(role);
-    }
+    const checkAuth = async () => {
+      const token = localStorage.getItem("token");
+      const role = localStorage.getItem("role");
+      
+      if (!token || !role) {
+        setIsCheckingAuth(false);
+        return;
+      }
+
+      // Verify token is still valid by checking expiration
+      try {
+        // Decode JWT to check expiration (without verification - just to check expiry)
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Date.now() / 1000; // Convert to seconds
+        
+        if (payload.exp && payload.exp < currentTime) {
+          // Token expired - clear it
+          console.log("Token expired, logging out...");
+          localStorage.removeItem("token");
+          localStorage.removeItem("role");
+          localStorage.removeItem("email");
+          setIsLoggedIn(false);
+          setUserRole(null);
+        } else {
+          // Token is still valid
+          setIsLoggedIn(true);
+          setUserRole(role);
+        }
+      } catch (error) {
+        // Invalid token format - clear it
+        console.error("Invalid token, logging out...", error);
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        localStorage.removeItem("email");
+        setIsLoggedIn(false);
+        setUserRole(null);
+      }
+      
+      setIsCheckingAuth(false);
+    };
+
+    checkAuth();
   }, []);
+
+  // Show loading while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-100">
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Router>

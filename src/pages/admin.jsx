@@ -160,8 +160,17 @@ function Admin() {
   };
 
   // Function to correctly construct the image URL
-  const getImageUrl = (img) =>
-    img ? `${API_URL}/${img.replace(/^\/+/, "")}` : "";
+  const getImageUrl = (img) => {
+    if (!img) return "";
+    
+    // ✅ If already a full URL (Cloudinary or external), return as-is
+    if (img.startsWith('http://') || img.startsWith('https://')) {
+      return img;
+    }
+    
+    // ✅ If relative path, prepend API_URL (for old local images)
+    return `${API_URL}/${img.replace(/^\/+/, "")}`;
+  };
 
   return (
     <div className="container py-4">
