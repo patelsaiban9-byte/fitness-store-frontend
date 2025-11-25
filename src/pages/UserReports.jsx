@@ -1,57 +1,48 @@
 import React, { useEffect, useState } from "react";
 
-const UserReports = () => {
-  const [reports, setReports] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function AdminReports() {
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/admin/reports")
+    fetch("http://localhost:5000/api/auth/admin/reports", {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    })
       .then((res) => res.json())
-      .then((data) => setReports(data))
-      .catch((err) => console.error("Error fetching reports:", err))
-      .finally(() => setLoading(false));
+      .then((data) => {
+        console.log("API RESPONSE:", data);
+        setUsers(data);
+      })
+      .catch((err) => console.error(err));
   }, []);
 
-  if (loading) return <p>Loading...</p>;
-
   return (
-    <div className="container mt-4">
-      <h2 className="text-center mb-4">User Reports</h2>
-      <table className="table table-bordered text-center">
-        <thead className="table-light">
-          <tr>
-            <th>User Email</th>
-            <th>Order Date</th>
-            <th>Order Details</th>
-          </tr>
-        </thead>
-        <tbody>
-          {reports.length === 0 && (
-            <tr>
-              <td colSpan={3}>No users found</td>
-            </tr>
-          )}
+    <div className="container py-4">
+      <h1 className="mb-4 text-center">📊 User Report</h1>
 
-          {reports.map((report, index) =>
-            report.orders && report.orders.length > 0 ? (
-              report.orders.map((order, orderIndex) => (
-                <tr key={`${index}-${orderIndex}`}>
-                  <td>{report.email}</td>
-                  <td>{new Date(order.createdAt).toLocaleString()}</td>
-                  <td>{order.product || order.productName || "Unknown"}</td>
-                </tr>
-              ))
-            ) : (
-              <tr key={index}>
-                <td>{report.email}</td>
-                <td colSpan={2}>No Orders Found</td>
+      {users.length === 0 ? (
+        <p className="text-center">No users found</p>
+      ) : (
+        <div className="table-responsive">
+          <table className="table table-bordered table-hover text-center align-middle">
+            <thead className="table-light">
+              <tr>
+                <th>Email</th>
+                <th>Phone</th>
               </tr>
-            )
-          )}
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u._id}>
+                  <td>{u.email}</td>
+                  <td>{u.phone}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
-};
-
-export default UserReports;
+}
