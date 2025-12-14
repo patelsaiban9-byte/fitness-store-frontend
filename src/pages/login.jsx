@@ -1,25 +1,29 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
-// Helper component for the Bootstrap Toast (assuming it's defined elsewhere or imported)
+// Helper component for the Bootstrap Toast
 const Toast = ({ message, type, show, onClose }) => {
-  // ... (Toast component implementation)
   if (!show) return null;
 
   const alertClass = {
-    success: 'alert-success',
-    danger: 'alert-danger',
-    warning: 'alert-warning',
-  }[type] || 'alert-info';
+    success: "alert-success",
+    danger: "alert-danger",
+    warning: "alert-warning",
+  }[type] || "alert-info";
 
   return (
     <div
       className={`alert ${alertClass} alert-dismissible fade show fixed-top mx-auto mt-3`}
       role="alert"
-      style={{ width: '90%', maxWidth: '500px', zIndex: 1050 }}
+      style={{ width: "90%", maxWidth: "500px", zIndex: 1050 }}
     >
       {message}
-      <button type="button" className="btn-close" onClick={onClose} aria-label="Close"></button>
+      <button
+        type="button"
+        className="btn-close"
+        onClick={onClose}
+        aria-label="Close"
+      ></button>
     </div>
   );
 };
@@ -30,19 +34,23 @@ function Login({ setIsLoggedIn, setUserRole }) {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    type: "info",
+  });
 
-  const showToast = (message, type = 'info') => {
+  const showToast = (message, type = "info") => {
     setToast({ show: true, message, type });
     setTimeout(() => {
-      setToast({ show: false, message: '', type: 'info' });
+      setToast({ show: false, message: "", type: "info" });
     }, 3000);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setToast({ show: false, message: '', type: 'info' });
+    setToast({ show: false, message: "", type: "info" });
 
     try {
       const apiUrl =
@@ -61,9 +69,13 @@ function Login({ setIsLoggedIn, setUserRole }) {
         return;
       }
 
+      // 🔐 EXISTING LOGIC (UNCHANGED)
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.user.role);
       localStorage.setItem("email", data.user.email);
+
+      // ✅ ONLY NEW LINE ADDED (DO NOT REMOVE)
+      localStorage.setItem("phone", data.user.phone);
 
       setIsLoggedIn(true);
       setUserRole(data.user.role);
@@ -76,8 +88,7 @@ function Login({ setIsLoggedIn, setUserRole }) {
         } else {
           navigate("/");
         }
-      }, 1000); 
-
+      }, 1000);
     } catch (err) {
       console.error("❌ Login error:", err);
       setError("Something went wrong. Please try again.");
@@ -85,22 +96,21 @@ function Login({ setIsLoggedIn, setUserRole }) {
   };
 
   return (
-    // ⚠️ THIS IS THE CORRECT CENTERING CODE
     <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
-      
-      {/* Toast Notification */}
-      <Toast 
-        message={toast.message} 
-        type={toast.type} 
-        show={toast.show} 
-        onClose={() => setToast({ ...toast, show: false })} 
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        show={toast.show}
+        onClose={() => setToast({ ...toast, show: false })}
       />
 
       <div
         className="card shadow-lg border-0 p-4 w-100"
         style={{ maxWidth: "420px" }}
       >
-        <h3 className="text-center mb-4 fw-bold text-primary">🔐 Welcome Back!</h3>
+        <h3 className="text-center mb-4 fw-bold text-primary">
+          🔐 Welcome Back!
+        </h3>
 
         {error && (
           <div className="alert alert-danger text-center">{error}</div>
@@ -108,7 +118,9 @@ function Login({ setIsLoggedIn, setUserRole }) {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label className="form-label fw-semibold">Email Address</label>
+            <label className="form-label fw-semibold">
+              Email Address
+            </label>
             <input
               type="email"
               className="form-control form-control-lg"
@@ -120,7 +132,9 @@ function Login({ setIsLoggedIn, setUserRole }) {
           </div>
 
           <div className="mb-3">
-            <label className="form-label fw-semibold">Password</label>
+            <label className="form-label fw-semibold">
+              Password
+            </label>
             <input
               type="password"
               className="form-control form-control-lg"
@@ -131,7 +145,10 @@ function Login({ setIsLoggedIn, setUserRole }) {
             />
           </div>
 
-          <button type="submit" className="btn btn-primary btn-lg w-100">
+          <button
+            type="submit"
+            className="btn btn-primary btn-lg w-100"
+          >
             Sign In
           </button>
         </form>

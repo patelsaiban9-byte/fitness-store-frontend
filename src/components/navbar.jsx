@@ -5,7 +5,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
-  // ✅ NEW: cart count state
+  // ✅ Cart count state
   const [cartCount, setCartCount] = useState(0);
 
   /* ===============================
@@ -23,7 +23,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
 
     updateCartCount();
 
-    // Update cart count when localStorage changes
+    // Listen for cart changes (other tabs / updates)
     window.addEventListener("storage", updateCartCount);
 
     return () => {
@@ -35,6 +35,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     localStorage.removeItem("email");
+    localStorage.removeItem("phone");
     setIsLoggedIn(false);
     setUserRole(null);
     navigate("/login");
@@ -46,11 +47,9 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
   };
 
   return (
-    <nav
-      className="navbar navbar-expand-lg navbar-dark bg-primary shadow-lg sticky-top w-100"
-      style={{ zIndex: 1060, width: "100%", margin: 0, padding: 0 }}
-    >
+    <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow-lg sticky-top">
       <div className="container-fluid px-3 px-md-4">
+        {/* BRAND */}
         <Link
           className="navbar-brand fw-bolder fs-5 d-flex align-items-center"
           to="/"
@@ -60,6 +59,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
           Health & Fitness Store
         </Link>
 
+        {/* TOGGLER */}
         <button
           className="navbar-toggler"
           type="button"
@@ -69,10 +69,12 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
           <span className="navbar-toggler-icon"></span>
         </button>
 
+        {/* LINKS */}
         <div className={`collapse navbar-collapse ${isOpen ? "show" : ""}`}>
           <ul className="navbar-nav ms-auto align-items-center">
             {isLoggedIn && (
               <>
+                {/* HOME */}
                 <li className="nav-item">
                   <Link
                     className="nav-link text-white fw-semibold mx-1"
@@ -83,6 +85,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                   </Link>
                 </li>
 
+                {/* PRODUCTS */}
                 <li className="nav-item">
                   <Link
                     className="nav-link text-white fw-semibold mx-1"
@@ -93,7 +96,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                   </Link>
                 </li>
 
-                {/* ✅ NEW: CART LINK */}
+                {/* 🛒 CART (USER ONLY) */}
                 {userRole !== "admin" && (
                   <li className="nav-item position-relative">
                     <Link
@@ -114,6 +117,20 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                   </li>
                 )}
 
+                {/* 📦 MY ORDERS (USER ONLY) */}
+                {userRole !== "admin" && (
+                  <li className="nav-item">
+                    <Link
+                      className="nav-link text-white fw-semibold mx-1"
+                      to="/my-orders"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      My Orders
+                    </Link>
+                  </li>
+                )}
+
+                {/* ABOUT */}
                 <li className="nav-item">
                   <Link
                     className="nav-link text-white fw-semibold mx-1"
@@ -124,6 +141,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                   </Link>
                 </li>
 
+                {/* ADMIN LINKS */}
                 {userRole === "admin" && (
                   <>
                     <li className="nav-item">
@@ -148,6 +166,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                   </>
                 )}
 
+                {/* LOGOUT */}
                 <li className="nav-item">
                   <button
                     className="btn btn-danger fw-bold ms-lg-2 px-3"
@@ -159,6 +178,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
               </>
             )}
 
+            {/* LOGIN */}
             {!isLoggedIn && (
               <li className="nav-item">
                 <Link

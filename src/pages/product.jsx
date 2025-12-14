@@ -6,8 +6,7 @@ import { useNavigate } from "react-router-dom";
   -----------------
   - Fetch products from backend
   - Show product cards
-  - Add to Cart (localStorage based)
-  - Buy Now (existing logic untouched)
+  - Click card to open product detail page
 */
 
 function Product() {
@@ -15,15 +14,10 @@ function Product() {
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
-
-  // Get user role from localStorage (already used in your project)
-  const userRole = localStorage.getItem("role");
-
-  // Backend API URL
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   /* ===============================
-     FETCH PRODUCTS (OLD LOGIC)
+     FETCH PRODUCTS
      =============================== */
   const fetchProducts = async () => {
     try {
@@ -43,106 +37,43 @@ function Product() {
   }, []);
 
   /* ===============================
-     IMAGE URL HANDLING (OLD LOGIC)
+     IMAGE URL HANDLING
      =============================== */
   const getImageUrl = (img) => {
     if (!img) return "";
-
-    // If already full URL (Cloudinary)
-    if (img.startsWith("http://") || img.startsWith("https://")) {
-      return img;
-    }
-
-    // If local image path
+    if (img.startsWith("http")) return img;
     return `${API_URL}/${img.replace(/^\/+/, "")}`;
   };
 
-  // If image fails to load
   const handleImageError = (e) => {
     e.target.src =
       "https://via.placeholder.com/300x200?text=Image+Not+Available";
   };
 
   /* ===============================
-     ADD TO CART (NEW FEATURE)
-     =============================== */
-  const addToCart = (product) => {
-    // Get cart from localStorage (or empty array)
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-    // Check if product already exists in cart
-    const existingItem = cart.find(
-      (item) => item._id === product._id
-    );
-
-    if (existingItem) {
-      // If exists, increase quantity
-      existingItem.qty += 1;
-    } else {
-      // If not exists, add new product
-      cart.push({
-        _id: product._id,
-        name: product.name,
-        price: product.price,
-        image: product.image,
-        qty: 1,
-      });
-    }
-
-    // Save updated cart back to localStorage
-    localStorage.setItem("cart", JSON.stringify(cart));
-
-    // Simple confirmation
-    alert("Product added to cart 🛒");
-  };
-
-  /* ===============================
-     LOADING STATE
+     LOADING
      =============================== */
   if (loading) {
     return (
-      <div className="container py-5">
-        <div
-          className="d-flex justify-content-center align-items-center"
-          style={{ minHeight: "400px" }}
-        >
-          <div className="text-center">
-            <div
-              className="spinner-border text-primary"
-              role="status"
-              style={{ width: "3rem", height: "3rem" }}
-            >
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="mt-3 text-muted">Loading products...</p>
-          </div>
-        </div>
+      <div className="container py-5 text-center">
+        <div className="spinner-border text-primary"></div>
       </div>
     );
   }
 
-  /* ===============================
-     NO PRODUCTS STATE
-     =============================== */
   if (products.length === 0) {
     return (
-      <div className="container py-5">
-        <div className="text-center">
-          <h2>No Products Available</h2>
-          <p className="text-muted">
-            Check back later for new products!
-          </p>
-        </div>
+      <div className="container py-5 text-center">
+        <h2>No Products Available</h2>
       </div>
     );
   }
 
   /* ===============================
-     MAIN UI
+     UI
      =============================== */
   return (
     <>
-      {/* Card hover styling */}
       <style>
         {`
           .product-card {
@@ -157,7 +88,7 @@ function Product() {
         `}
       </style>
 
-      <div className="container py-4 py-md-5">
+      <div className="container py-4">
         <h1 className="text-center mb-5 fw-bold">
           🛍️ Available Products
         </h1>
@@ -168,8 +99,14 @@ function Product() {
               key={product._id}
               className="col-12 col-sm-6 col-md-4 col-lg-3"
             >
-              <div className="card h-100 product-card shadow-sm">
-                {/* Product Image */}
+              {/* ✅ CARD CLICK → PRODUCT DETAIL */}
+              <div
+                className="card h-100 product-card shadow-sm"
+                onClick={() =>
+                  navigate(`/product/${product._id}`)
+                }
+              >
+                {/* IMAGE */}
                 <div
                   style={{
                     height: "220px",
@@ -186,7 +123,7 @@ function Product() {
                   />
                 </div>
 
-                {/* Product Info */}
+                {/* INFO */}
                 <div className="card-body d-flex flex-column">
                   <h5 className="fw-bold">{product.name}</h5>
 
@@ -194,32 +131,9 @@ function Product() {
                     {product.description || "No description available"}
                   </p>
 
-                  <h6 className="fw-bold text-success mb-3">
+                  <h6 className="fw-bold text-success">
                     ₹{product.price}
                   </h6>
-
-                  {/* Buttons (Hide for Admin) */}
-                  {userRole !== "admin" && (
-                    <div className="d-flex gap-2">
-                      {/* Add to Cart */}
-                      <button
-                        className="btn btn-outline-primary w-50"
-                        onClick={() => addToCart(product)}
-                      >
-                        ➕ Add to Cart
-                      </button>
-
-                      {/* Buy Now (OLD LOGIC – untouched) */}
-                      <button
-                        className="btn btn-primary w-50"
-                        onClick={() =>
-                          navigate(`/order/${product._id}`)
-                        }
-                      >
-                        🛒 Buy Now
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

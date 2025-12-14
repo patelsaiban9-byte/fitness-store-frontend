@@ -1,19 +1,34 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import Navbar from "./components/navbar";
-import Login from "./pages/login";
-import Home from "./pages/home";
-import Products from "./pages/product";
-import Admin from "./pages/admin";
-import AdminOrders from "./pages/adminorder";
-import OrderForm from "./pages/orderform";
-import Register from "./pages/register";
-import About from "./pages/about";
-import UserReports from "./pages/UserReports";
-
-// ✅ ADD THIS IMPORT (NEW)
-import Cart from "./pages/cart";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 
 import { useState, useEffect } from "react";
+
+// Components
+import Navbar from "./components/navbar";
+
+// Pages
+import Login from "./pages/login";
+import Register from "./pages/register";
+import Home from "./pages/home";
+import Products from "./pages/product";
+import Cart from "./pages/cart";
+import OrderForm from "./pages/orderform";
+import About from "./pages/about";
+import ProductDetail from "./pages/ProductDetail";
+
+
+// Admin pages
+import Admin from "./pages/admin";
+import AdminOrders from "./pages/adminorder";
+import UserReports from "./pages/UserReports";
+
+// ✅ NEW PAGE
+import MyOrders from "./pages/MyOrders";
 
 /* ===============================
    ROUTE PROTECTION (OLD LOGIC)
@@ -32,7 +47,13 @@ function AdminRoute({ isLoggedIn, userRole, children }) {
 /* ===============================
    LAYOUT (OLD LOGIC)
    =============================== */
-function Layout({ children, isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
+function Layout({
+  children,
+  isLoggedIn,
+  userRole,
+  setIsLoggedIn,
+  setUserRole,
+}) {
   const location = useLocation();
   const hideNavbar = ["/login", "/register"].includes(location.pathname);
 
@@ -60,7 +81,7 @@ function App() {
      AUTH CHECK (OLD LOGIC)
      =============================== */
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuth = () => {
       const token = localStorage.getItem("token");
       const role = localStorage.getItem("role");
 
@@ -77,6 +98,7 @@ function App() {
           localStorage.removeItem("token");
           localStorage.removeItem("role");
           localStorage.removeItem("email");
+          localStorage.removeItem("phone");
           setIsLoggedIn(false);
           setUserRole(null);
         } else {
@@ -87,6 +109,7 @@ function App() {
         localStorage.removeItem("token");
         localStorage.removeItem("role");
         localStorage.removeItem("email");
+        localStorage.removeItem("phone");
         setIsLoggedIn(false);
         setUserRole(null);
       }
@@ -97,6 +120,9 @@ function App() {
     checkAuth();
   }, []);
 
+  /* ===============================
+     LOADING SCREEN
+     =============================== */
   if (isCheckingAuth) {
     return (
       <div className="d-flex justify-content-center align-items-center min-vh-100">
@@ -117,11 +143,15 @@ function App() {
         setUserRole={setUserRole}
       >
         <Routes>
-
           {/* Login / Register */}
           <Route
             path="/login"
-            element={<Login setIsLoggedIn={setIsLoggedIn} setUserRole={setUserRole} />}
+            element={
+              <Login
+                setIsLoggedIn={setIsLoggedIn}
+                setUserRole={setUserRole}
+              />
+            }
           />
           <Route path="/register" element={<Register />} />
 
@@ -145,12 +175,32 @@ function App() {
             }
           />
 
-          {/* ✅ CART PAGE (NEW – NO OLD LOGIC TOUCHED) */}
+          {/* Cart */}
           <Route
             path="/cart"
             element={
               <ProtectedRoute isLoggedIn={isLoggedIn}>
                 <Cart />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* My Orders (USER) */}
+          <Route
+            path="/my-orders"
+            element={
+              <ProtectedRoute isLoggedIn={isLoggedIn}>
+                <MyOrders />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Order Form */}
+          <Route
+            path="/order/:id"
+            element={
+              <ProtectedRoute isLoggedIn={isLoggedIn}>
+                <OrderForm />
               </ProtectedRoute>
             }
           />
@@ -169,7 +219,10 @@ function App() {
           <Route
             path="/admin"
             element={
-              <AdminRoute isLoggedIn={isLoggedIn} userRole={userRole}>
+              <AdminRoute
+                isLoggedIn={isLoggedIn}
+                userRole={userRole}
+              >
                 <Admin />
               </AdminRoute>
             }
@@ -179,7 +232,10 @@ function App() {
           <Route
             path="/admin/orders"
             element={
-              <AdminRoute isLoggedIn={isLoggedIn} userRole={userRole}>
+              <AdminRoute
+                isLoggedIn={isLoggedIn}
+                userRole={userRole}
+              >
                 <AdminOrders />
               </AdminRoute>
             }
@@ -189,27 +245,35 @@ function App() {
           <Route
             path="/admin/reports"
             element={
-              <AdminRoute isLoggedIn={isLoggedIn} userRole={userRole}>
+              <AdminRoute
+                isLoggedIn={isLoggedIn}
+                userRole={userRole}
+              >
                 <UserReports />
               </AdminRoute>
-            }
-          />
-
-          {/* Order Form */}
-          <Route
-            path="/order/:id"
-            element={
-              <ProtectedRoute isLoggedIn={isLoggedIn}>
-                <OrderForm />
-              </ProtectedRoute>
             }
           />
 
           {/* Fallback */}
           <Route
             path="*"
-            element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />}
+            element={
+              <Navigate
+                to={isLoggedIn ? "/" : "/login"}
+                replace
+              />
+            }
           />
+          {/* Product Detail Page */}
+<Route
+  path="/product/:id"
+  element={
+    <ProtectedRoute isLoggedIn={isLoggedIn}>
+      <ProductDetail />
+    </ProtectedRoute>
+  }
+/>
+
         </Routes>
       </Layout>
     </Router>
