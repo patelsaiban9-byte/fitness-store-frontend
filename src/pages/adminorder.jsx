@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 
 function AdminOrders() {
   const [orders, setOrders] = useState([]);
-  const API_URL = import.meta.env.VITE_API_URL;
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-  // Fetch all orders from backend
+  /* ===============================
+     FETCH ALL ORDERS
+     =============================== */
   const fetchOrders = async () => {
     try {
       const res = await fetch(`${API_URL}/api/orders`);
@@ -19,82 +21,104 @@ function AdminOrders() {
     fetchOrders();
   }, []);
 
-  // Delete order
+  /* ===============================
+     DELETE FULL ORDER
+     =============================== */
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this order?")) return;
+    if (!window.confirm("Delete this order?")) return;
 
     try {
-      const res = await fetch(`${API_URL}/api/orders/${id}`, {
+      await fetch(`${API_URL}/api/orders/${id}`, {
         method: "DELETE",
       });
-
-      const data = await res.json();
-      if (res.ok) {
-        alert(data.message || "Order deleted");
-        fetchOrders(); // refresh list
-      } else {
-        alert(data.error || "Failed to delete order");
-      }
+      alert("Order deleted");
+      fetchOrders();
     } catch (err) {
-      console.error("Error deleting order:", err);
-      alert("Something went wrong. Please try again.");
+      console.error("Delete error:", err);
+      alert("Failed to delete order");
     }
   };
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>📦 All Orders</h1>
+      <h1 style={{ marginBottom: "20px" }}>📦 Orders</h1>
+
       {orders.length === 0 ? (
         <p>No orders found.</p>
       ) : (
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            marginTop: "20px",
-          }}
-        >
-          <thead>
-            <tr style={{ backgroundColor: "#f0f0f0" }}>
-              <th style={{ border: "1px solid #ccc", padding: "8px" }}>Name</th>
-              <th style={{ border: "1px solid #ccc", padding: "8px" }}>Address</th>
-              <th style={{ border: "1px solid #ccc", padding: "8px" }}>Phone</th>
-              <th style={{ border: "1px solid #ccc", padding: "8px" }}>Product</th>
-              <th style={{ border: "1px solid #ccc", padding: "8px" }}>Price</th>
-              <th style={{ border: "1px solid #ccc", padding: "8px" }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => (
-              <tr key={order._id} style={{ textAlign: "center" }}>
-                <td style={{ border: "1px solid #ccc", padding: "8px" }}>{order.name}</td>
-                <td style={{ border: "1px solid #ccc", padding: "8px" }}>{order.address}</td>
-                <td style={{ border: "1px solid #ccc", padding: "8px" }}>{order.phone}</td>
-                <td style={{ border: "1px solid #ccc", padding: "8px" }}>
-                  {order.productId ? order.productId.name : "Product deleted"}
-                </td>
-                <td style={{ border: "1px solid #ccc", padding: "8px" }}>
-                  {order.productId ? `₹${order.productId.price}` : "-"}
-                </td>
-                <td style={{ border: "1px solid #ccc", padding: "8px" }}>
-                  <button
-                    onClick={() => handleDelete(order._id)}
-                    style={{
-                      padding: "5px 10px",
-                      backgroundColor: "red",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "5px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
+        orders.map((order) => (
+          <div
+            key={order._id}
+            style={{
+              background: "#ffffff",
+              padding: "20px",
+              borderRadius: "14px",
+              marginBottom: "20px",
+              boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
+            }}
+          >
+            {/* CUSTOMER INFO */}
+            <div style={{ marginBottom: "12px" }}>
+              <strong>👤 Customer:</strong> {order.customer?.name} <br />
+              <strong>📞 Phone:</strong> {order.customer?.phone} <br />
+              <strong>📍 Address:</strong> {order.customer?.address} <br />
+              <strong>🏷️ Pincode:</strong> {order.customer?.pincode}
+            </div>
+
+            <hr />
+
+            {/* ITEMS */}
+            {order.items.map((item, index) => (
+              <div
+                key={index}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontSize: "14px",
+                  marginBottom: "6px",
+                }}
+              >
+                <span>
+                  {item.name} × {item.qty}
+                </span>
+                <span>₹{item.price * item.qty}</span>
+              </div>
             ))}
-          </tbody>
-        </table>
+
+            <hr />
+
+            {/* TOTAL */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontWeight: "bold",
+                fontSize: "16px",
+                color: "#15803d",
+              }}
+            >
+              <span>Total</span>
+              <span>₹{order.totalAmount}</span>
+            </div>
+
+            {/* DELETE */}
+            <div style={{ marginTop: "14px", textAlign: "right" }}>
+              <button
+                onClick={() => handleDelete(order._id)}
+                style={{
+                  padding: "8px 16px",
+                  background: "#dc2626",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                }}
+              >
+                Delete Order
+              </button>
+            </div>
+          </div>
+        ))
       )}
     </div>
   );

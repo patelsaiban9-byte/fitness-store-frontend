@@ -8,11 +8,16 @@ import AdminOrders from "./pages/adminorder";
 import OrderForm from "./pages/orderform";
 import Register from "./pages/register";
 import About from "./pages/about";
-import UserReports from "./pages/UserReports"; // ✅ Added correctly
+import UserReports from "./pages/UserReports";
+
+// ✅ ADD THIS IMPORT (NEW)
+import Cart from "./pages/cart";
 
 import { useState, useEffect } from "react";
 
-// ✅ Route protection wrappers
+/* ===============================
+   ROUTE PROTECTION (OLD LOGIC)
+   =============================== */
 function ProtectedRoute({ isLoggedIn, children }) {
   if (!isLoggedIn) return <Navigate to="/login" replace />;
   return children;
@@ -24,7 +29,9 @@ function AdminRoute({ isLoggedIn, userRole, children }) {
   return children;
 }
 
-// ✅ Wrapper to hide Navbar on login/register pages
+/* ===============================
+   LAYOUT (OLD LOGIC)
+   =============================== */
 function Layout({ children, isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
   const location = useLocation();
   const hideNavbar = ["/login", "/register"].includes(location.pathname);
@@ -47,61 +54,54 @@ function Layout({ children, isLoggedIn, userRole, setIsLoggedIn, setUserRole }) 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState(null);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Loading state
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
+  /* ===============================
+     AUTH CHECK (OLD LOGIC)
+     =============================== */
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem("token");
       const role = localStorage.getItem("role");
-      
+
       if (!token || !role) {
         setIsCheckingAuth(false);
         return;
       }
 
-      // Verify token is still valid by checking expiration
       try {
-        // Decode JWT to check expiration (without verification - just to check expiry)
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const currentTime = Date.now() / 1000; // Convert to seconds
-        
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const currentTime = Date.now() / 1000;
+
         if (payload.exp && payload.exp < currentTime) {
-          // Token expired - clear it
-          console.log("Token expired, logging out...");
           localStorage.removeItem("token");
           localStorage.removeItem("role");
           localStorage.removeItem("email");
           setIsLoggedIn(false);
           setUserRole(null);
         } else {
-          // Token is still valid
           setIsLoggedIn(true);
           setUserRole(role);
         }
       } catch (error) {
-        // Invalid token format - clear it
-        console.error("Invalid token, logging out...", error);
         localStorage.removeItem("token");
         localStorage.removeItem("role");
         localStorage.removeItem("email");
         setIsLoggedIn(false);
         setUserRole(null);
       }
-      
+
       setIsCheckingAuth(false);
     };
 
     checkAuth();
   }, []);
 
-  // Show loading while checking authentication
   if (isCheckingAuth) {
     return (
       <div className="d-flex justify-content-center align-items-center min-vh-100">
         <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
+          <div className="spinner-border text-primary" role="status"></div>
           <p className="mt-3">Checking authentication...</p>
         </div>
       </div>
@@ -117,6 +117,7 @@ function App() {
         setUserRole={setUserRole}
       >
         <Routes>
+
           {/* Login / Register */}
           <Route
             path="/login"
@@ -140,6 +141,16 @@ function App() {
             element={
               <ProtectedRoute isLoggedIn={isLoggedIn}>
                 <Products />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ✅ CART PAGE (NEW – NO OLD LOGIC TOUCHED) */}
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute isLoggedIn={isLoggedIn}>
+                <Cart />
               </ProtectedRoute>
             }
           />
@@ -174,7 +185,7 @@ function App() {
             }
           />
 
-          {/* ✅ User Reports Page */}
+          {/* Admin Reports */}
           <Route
             path="/admin/reports"
             element={
@@ -194,8 +205,11 @@ function App() {
             }
           />
 
-          {/* Redirect unknown routes */}
-          <Route path="*" element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} />
+          {/* Fallback */}
+          <Route
+            path="*"
+            element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />}
+          />
         </Routes>
       </Layout>
     </Router>
