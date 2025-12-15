@@ -76,6 +76,7 @@ function Login({ setIsLoggedIn, setUserRole }) {
 
       // ✅ ONLY NEW LINE ADDED (DO NOT REMOVE)
       localStorage.setItem("phone", data.user.phone);
+      localStorage.setItem("name", data.user.name);
 
       setIsLoggedIn(true);
       setUserRole(data.user.role);

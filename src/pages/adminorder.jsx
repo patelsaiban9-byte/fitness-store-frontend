@@ -22,7 +22,7 @@ function AdminOrders() {
   }, []);
 
   /* ===============================
-     DELETE FULL ORDER
+     DELETE ORDER
      =============================== */
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this order?")) return;
@@ -37,6 +37,40 @@ function AdminOrders() {
       console.error("Delete error:", err);
       alert("Failed to delete order");
     }
+  };
+
+  /* ===============================
+     UPDATE PAYMENT STATUS
+     =============================== */
+  const updatePaymentStatus = async (id, status) => {
+    try {
+      const res = await fetch(`${API_URL}/api/orders/payment/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentStatus: status }),
+      });
+
+      if (!res.ok) {
+        alert("Failed to update payment status");
+        return;
+      }
+
+      alert("✅ Payment status updated");
+      fetchOrders();
+    } catch (err) {
+      console.error("Payment update error:", err);
+      alert("Error updating payment");
+    }
+  };
+
+  /* ===============================
+     🧾 DOWNLOAD INVOICE (NEW)
+     =============================== */
+  const downloadInvoice = (orderId) => {
+    window.open(
+      `${API_URL}/api/orders/invoice/${orderId}`,
+      "_blank"
+    );
   };
 
   return (
@@ -101,19 +135,67 @@ function AdminOrders() {
               <span>₹{order.totalAmount}</span>
             </div>
 
+            {/* PAYMENT INFO */}
+            <div
+              style={{
+                marginTop: "10px",
+                fontSize: "14px",
+                background: "#f9fafb",
+                padding: "10px",
+                borderRadius: "8px",
+              }}
+            >
+              <div>
+                <strong>💳 Payment Method:</strong>{" "}
+                {order.paymentMethod || "COD"}
+              </div>
+
+              <div>
+                <strong>📌 Payment Status:</strong>{" "}
+                <span
+                  style={{
+                    fontWeight: "bold",
+                    color:
+                      order.paymentStatus === "PAID"
+                        ? "#16a34a"
+                        : order.paymentStatus === "FAILED"
+                        ? "#dc2626"
+                        : "#ca8a04",
+                  }}
+                >
+                  {order.paymentStatus || "PENDING"}
+                </span>
+              </div>
+
+              {/* ACTION BUTTONS */}
+              <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
+                <button
+                  onClick={() => updatePaymentStatus(order._id, "PAID")}
+                  style={btnGreen}
+                >
+                  Mark Paid
+                </button>
+
+                <button
+                  onClick={() => updatePaymentStatus(order._id, "FAILED")}
+                  style={btnRed}
+                >
+                  Mark Failed
+                </button>
+
+                {/* 🧾 INVOICE BUTTON (NEW) */}
+                <button
+                  onClick={() => downloadInvoice(order._id)}
+                  style={btnBlue}
+                >
+                  Download Invoice
+                </button>
+              </div>
+            </div>
+
             {/* DELETE */}
             <div style={{ marginTop: "14px", textAlign: "right" }}>
-              <button
-                onClick={() => handleDelete(order._id)}
-                style={{
-                  padding: "8px 16px",
-                  background: "#dc2626",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                }}
-              >
+              <button onClick={() => handleDelete(order._id)} style={btnRed}>
                 Delete Order
               </button>
             </div>
@@ -123,5 +205,35 @@ function AdminOrders() {
     </div>
   );
 }
+
+/* ===============================
+   BUTTON STYLES
+   =============================== */
+const btnGreen = {
+  padding: "6px 12px",
+  background: "#16a34a",
+  color: "#fff",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+};
+
+const btnRed = {
+  padding: "6px 12px",
+  background: "#dc2626",
+  color: "#fff",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+};
+
+const btnBlue = {
+  padding: "6px 12px",
+  background: "#2563eb",
+  color: "#fff",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+};
 
 export default AdminOrders;

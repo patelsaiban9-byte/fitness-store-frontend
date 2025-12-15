@@ -6,6 +6,8 @@ function OrderForm() {
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   const [cartItems, setCartItems] = useState([]);
+  const [paymentMethod, setPaymentMethod] = useState("COD");
+
   const [formData, setFormData] = useState({
     name: "",
     address: "",
@@ -54,7 +56,7 @@ function OrderForm() {
   );
 
   /* ===============================
-     PLACE ORDER (FINAL FIX)
+     PLACE ORDER (FINAL FIX ✅)
      =============================== */
   const handleOrder = async (e) => {
     e.preventDefault();
@@ -69,12 +71,16 @@ function OrderForm() {
         landmark: formData.landmark,
       },
       items: cartItems.map((item) => ({
-        productId: item._id,   // ✅ FIXED
+        productId: item._id,
         name: item.name,
         price: item.price,
-        qty: item.qty,         // ✅ FIXED
+        qty: item.qty,
       })),
       totalAmount,
+
+      // ✅ ENUM-SAFE & FINAL
+      paymentMethod: paymentMethod === "COD" ? "COD" : "UPI",
+      paymentStatus: paymentMethod === "COD" ? "PENDING" : "PAID",
     };
 
     try {
@@ -102,48 +108,13 @@ function OrderForm() {
      UI
      =============================== */
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "radial-gradient(circle at top, #eef7ff, #e8f5e9)",
-        padding: "20px",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "500px",
-          background: "#ffffff",
-          padding: "30px",
-          borderRadius: "20px",
-          boxShadow: "0 20px 40px rgba(0,0,0,0.18)",
-          color: "#111827",
-        }}
-      >
-        {/* CART SUMMARY */}
-        <div
-          style={{
-            background: "#f9fafb",
-            padding: "18px",
-            borderRadius: "14px",
-            marginBottom: "22px",
-            border: "1px solid #e5e7eb",
-          }}
-        >
-          <h3 style={{ marginBottom: "12px" }}>🛒 Cart Summary</h3>
+    <div style={pageStyle}>
+      <div style={cardStyle}>
+        <div style={summaryStyle}>
+          <h3>🛒 Cart Summary</h3>
 
           {cartItems.map((item) => (
-            <div
-              key={item._id}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginBottom: "8px",
-              }}
-            >
+            <div key={item._id} style={rowStyle}>
               <span>{item.name} × {item.qty}</span>
               <span>₹{item.price * item.qty}</span>
             </div>
@@ -151,19 +122,44 @@ function OrderForm() {
 
           <hr />
 
-          <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "bold", color: "#15803d" }}>
+          <div style={totalStyle}>
             <span>Total</span>
             <span>₹{totalAmount}</span>
           </div>
         </div>
 
-        {/* FORM */}
         <form onSubmit={handleOrder}>
           <input name="name" placeholder="Your Name" onChange={handleChange} style={inputStyle} />
           <input name="address" placeholder="Your Address" onChange={handleChange} style={inputStyle} />
           <input name="phone" placeholder="Phone Number" onChange={handleChange} style={inputStyle} />
           <input name="landmark" placeholder="Landmark" onChange={handleChange} style={inputStyle} />
           <input name="pincode" placeholder="Pincode" onChange={handleChange} style={inputStyle} />
+
+          <div style={{ marginBottom: "16px" }}>
+            <strong>Payment Method</strong>
+            <div>
+              <label>
+                <input
+                  type="radio"
+                  value="COD"
+                  checked={paymentMethod === "COD"}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                />{" "}
+                Cash on Delivery
+              </label>
+            </div>
+            <div>
+              <label>
+                <input
+                  type="radio"
+                  value="ONLINE"
+                  checked={paymentMethod === "ONLINE"}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                />{" "}
+                Online Payment (Demo)
+              </label>
+            </div>
+          </div>
 
           <button type="submit" style={submitBtn}>Confirm Order</button>
           <button type="button" onClick={() => navigate("/products")} style={cancelBtn}>Cancel</button>
@@ -176,6 +172,45 @@ function OrderForm() {
 /* ===============================
    STYLES
    =============================== */
+const pageStyle = {
+  minHeight: "100vh",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  background: "radial-gradient(circle at top, #eef7ff, #e8f5e9)",
+  padding: "20px",
+};
+
+const cardStyle = {
+  width: "100%",
+  maxWidth: "500px",
+  background: "#ffffff",
+  padding: "30px",
+  borderRadius: "20px",
+  boxShadow: "0 20px 40px rgba(0,0,0,0.18)",
+};
+
+const summaryStyle = {
+  background: "#f9fafb",
+  padding: "18px",
+  borderRadius: "14px",
+  marginBottom: "22px",
+  border: "1px solid #e5e7eb",
+};
+
+const rowStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  marginBottom: "8px",
+};
+
+const totalStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  fontWeight: "bold",
+  color: "#15803d",
+};
+
 const inputStyle = {
   width: "100%",
   marginBottom: "16px",
@@ -183,8 +218,6 @@ const inputStyle = {
   borderRadius: "12px",
   border: "1px solid #cbd5e1",
   fontSize: "15px",
-  background: "#f8fafc",
-  color: "#111827",
 };
 
 const submitBtn = {
