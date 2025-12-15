@@ -63,6 +63,8 @@ function OrderForm() {
     if (!validateForm()) return;
 
     const payload = {
+      // attach logged-in user's ObjectId if available
+      userId: localStorage.getItem("userId"),
       customer: {
         name: formData.name,
         phone: formData.phone,

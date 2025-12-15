@@ -5,27 +5,26 @@ function MyOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true); // 🔥 FIX
   const navigate = useNavigate();
+  const [downloading, setDownloading] = useState(null);
 
   const API_URL =
     import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-  // ✅ LOGIN KE TIME SAVE HUA PHONE
-  const phone = localStorage.getItem("phone");
+  // ✅ LOGIN STORES userId (MongoDB ObjectId)
+  const userId = localStorage.getItem("userId");
 
   useEffect(() => {
-    console.log("📞 PHONE FROM LOCALSTORAGE:", phone);
+    console.log("👤 userId FROM LOCALSTORAGE:", userId);
 
-    // 🔐 user login nahi hai to login page
-    if (!phone) {
+    // 🔐 if user not logged in, redirect to login
+    if (!userId) {
       navigate("/login");
       return;
     }
 
     const fetchMyOrders = async () => {
       try {
-        const res = await fetch(
-          `${API_URL}/api/orders/my/${phone}`
-        );
+        const res = await fetch(`${API_URL}/api/orders/my/user/${userId}`);
 
         const data = await res.json();
         console.log("📦 ORDERS FROM API:", data);
@@ -40,7 +39,7 @@ function MyOrders() {
     };
 
     fetchMyOrders();
-  }, [phone, API_URL, navigate]);
+  }, [userId, API_URL, navigate]);
 
   /* ===============================
      LOADING UI  🔥 NEW
@@ -132,6 +131,36 @@ function MyOrders() {
               <span className="badge bg-info text-dark">
                 📦 {order.orderStatus || "PLACED"}
               </span>
+            </div>
+
+            <div className="mt-3">
+              <button
+                className="btn btn-outline-secondary"
+                onClick={async () => {
+                  try {
+                    setDownloading(order._id);
+                    const res = await fetch(`${API_URL}/api/orders/invoice/${order._id}`);
+                    if (!res.ok) throw new Error('Failed to download');
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `invoice-${order._id}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                  } catch (err) {
+                    console.error('Invoice download error:', err);
+                    alert('Failed to download invoice');
+                  } finally {
+                    setDownloading(null);
+                  }
+                }}
+                disabled={downloading && downloading !== order._id}
+              >
+                {downloading === order._id ? 'Downloading...' : 'Download Invoice'}
+              </button>
             </div>
 
           </div>

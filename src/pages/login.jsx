@@ -74,7 +74,8 @@ function Login({ setIsLoggedIn, setUserRole }) {
       localStorage.setItem("role", data.user.role);
       localStorage.setItem("email", data.user.email);
 
-      // ✅ ONLY NEW LINE ADDED (DO NOT REMOVE)
+      // ✅ Persist user identifiers for client-side requests
+      localStorage.setItem("userId", data.user.id);
       localStorage.setItem("phone", data.user.phone);
       localStorage.setItem("name", data.user.name);
 
