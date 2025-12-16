@@ -156,6 +156,24 @@ function MyOrders() {
               </span>
             </div>
 
+            {/* TRACKING EVENTS */}
+            {Array.isArray(order.trackingEvents) && order.trackingEvents.length > 0 && (
+              <div className="mt-3">
+                <h6>Tracking</h6>
+                <ul className="list-group">
+                  {order.trackingEvents.map((ev, idx) => (
+                    <li key={idx} className="list-group-item d-flex justify-content-between align-items-start">
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{ev.status}</div>
+                        <div style={{ fontSize: 12, color: '#555' }}>{ev.note}</div>
+                      </div>
+                      <small className="text-muted">{ev.createdAt ? new Date(ev.createdAt).toLocaleString() : ''}</small>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {/* INVOICE DOWNLOAD */}
             <div className="mt-3">
               <button

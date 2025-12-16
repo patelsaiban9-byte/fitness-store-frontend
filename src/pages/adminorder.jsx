@@ -64,6 +64,30 @@ function AdminOrders() {
   };
 
   /* ===============================
+     UPDATE ORDER STATUS (ADMIN)
+     =============================== */
+  const updateOrderStatus = async (id, status) => {
+    try {
+      const res = await fetch(`${API_URL}/api/orders/status/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, note: `${status} via admin UI` }),
+      });
+
+      if (!res.ok) {
+        alert("Failed to update order status");
+        return;
+      }
+
+      alert("✅ Order status updated");
+      fetchOrders();
+    } catch (err) {
+      console.error("Status update error:", err);
+      alert("Error updating order status");
+    }
+  };
+
+  /* ===============================
      🧾 DOWNLOAD INVOICE (NEW)
      =============================== */
   const downloadInvoice = (orderId) => {
@@ -190,6 +214,14 @@ function AdminOrders() {
                 >
                   Download Invoice
                 </button>
+                {/* ORDER STATUS ACTIONS */}
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <button onClick={() => updateOrderStatus(order._id, "CONFIRMED")} style={btnOutline}>Confirm</button>
+                  <button onClick={() => updateOrderStatus(order._id, "SHIPPED")} style={btnOutline}>Shipped</button>
+                  <button onClick={() => updateOrderStatus(order._id, "OUT_FOR_DELIVERY")} style={btnOutline}>Out for Delivery</button>
+                  <button onClick={() => updateOrderStatus(order._id, "DELIVERED")} style={btnOutline}>Delivered</button>
+                  <button onClick={() => updateOrderStatus(order._id, "CANCELLED")} style={btnRed}>Cancel</button>
+                </div>
               </div>
             </div>
 
@@ -232,6 +264,15 @@ const btnBlue = {
   background: "#2563eb",
   color: "#fff",
   border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+};
+
+const btnOutline = {
+  padding: "6px 10px",
+  background: "transparent",
+  color: "#111827",
+  border: "1px solid #e5e7eb",
   borderRadius: "6px",
   cursor: "pointer",
 };
