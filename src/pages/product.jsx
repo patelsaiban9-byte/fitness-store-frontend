@@ -134,6 +134,36 @@ function Product() {
                   <h6 className="fw-bold text-success">
                     ₹{product.price}
                   </h6>
+
+                  {/* ADD TO CART BUTTON */}
+                  <button
+                    className="btn btn-success mt-2 w-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+                      const existingItem = cart.find(
+                        (item) => item._id === product._id
+                      );
+
+                      if (existingItem) {
+                        existingItem.qty += 1;
+                      } else {
+                        cart.push({
+                          _id: product._id,
+                          name: product.name,
+                          price: product.price,
+                          image: product.image,
+                          qty: 1,
+                        });
+                      }
+
+                      localStorage.setItem("cart", JSON.stringify(cart));
+                      window.dispatchEvent(new Event("storage"));
+                      alert(`${product.name} added to cart!`);
+                    }}
+                  >
+                    🛒 Add to Cart
+                  </button>
                 </div>
               </div>
             </div>
