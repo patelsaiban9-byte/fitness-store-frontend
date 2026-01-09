@@ -99,14 +99,21 @@ function Cart() {
           className="card mb-3 shadow-sm"
         >
           <div className="card-body d-flex justify-content-between align-items-center flex-wrap">
-            <div>
-              <h5 className="fw-bold">{item.name}</h5>
-              <p className="text-muted mb-1">
-                Price: ₹{item.price}
-              </p>
-              <p className="mb-0">
-                Quantity: {item.qty}
-              </p>
+            <div className="d-flex align-items-center">
+              <img
+                src={item.image || (item.images && item.images[0]) || item.imageUrl}
+                alt={item.name}
+                style={{ width: 80, height: 80, objectFit: "cover" }}
+                className="rounded"
+              />
+
+              <div className="ms-3">
+                <h5 className="mb-0 d-flex align-items-center gap-3">
+                  <span className="fw-bold">{item.name}</span>
+                  <small className="text-muted">Qty: {item.qty}</small>
+                  <span className="ms-3 text-muted">Price: ₹{item.price}</span>
+                </h5>
+              </div>
             </div>
 
             <div className="d-flex gap-2 mt-3 mt-md-0">
