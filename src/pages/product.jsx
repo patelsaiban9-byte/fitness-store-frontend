@@ -15,6 +15,7 @@ function Product() {
 
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const userRole = localStorage.getItem("role");
 
   /* ===============================
      FETCH PRODUCTS
@@ -135,35 +136,37 @@ function Product() {
                     ₹{product.price}
                   </h6>
 
-                  {/* ADD TO CART BUTTON */}
-                  <button
-                    className="btn btn-success mt-2 w-100"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const cart = JSON.parse(localStorage.getItem("cart")) || [];
-                      const existingItem = cart.find(
-                        (item) => item._id === product._id
-                      );
+                  {/* ADD TO CART BUTTON - ONLY FOR REGULAR USERS */}
+                  {userRole !== "admin" && (
+                    <button
+                      className="btn btn-success mt-2 w-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const cart = JSON.parse(localStorage.getItem("cart")) || [];
+                        const existingItem = cart.find(
+                          (item) => item._id === product._id
+                        );
 
-                      if (existingItem) {
-                        existingItem.qty += 1;
-                      } else {
-                        cart.push({
-                          _id: product._id,
-                          name: product.name,
-                          price: product.price,
-                          image: product.image,
-                          qty: 1,
-                        });
-                      }
+                        if (existingItem) {
+                          existingItem.qty += 1;
+                        } else {
+                          cart.push({
+                            _id: product._id,
+                            name: product.name,
+                            price: product.price,
+                            image: product.image,
+                            qty: 1,
+                          });
+                        }
 
-                      localStorage.setItem("cart", JSON.stringify(cart));
-                      window.dispatchEvent(new Event("storage"));
-                      alert(`${product.name} added to cart!`);
-                    }}
-                  >
-                    🛒 Add to Cart
-                  </button>
+                        localStorage.setItem("cart", JSON.stringify(cart));
+                        window.dispatchEvent(new Event("storage"));
+                        alert(`${product.name} added to cart!`);
+                      }}
+                    >
+                      🛒 Add to Cart
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
