@@ -5,6 +5,29 @@ function AdminOrders() {
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   /* ===============================
+     STATUS TRANSITION VALIDATION
+     =============================== */
+  const validTransitions = {
+    "PLACED": ["CONFIRMED", "CANCELLED"],
+    "CONFIRMED": ["SHIPPED", "CANCELLED"],
+    "SHIPPED": ["OUT_FOR_DELIVERY", "CANCELLED"],
+    "OUT_FOR_DELIVERY": ["DELIVERED", "CANCELLED"],
+    "DELIVERED": ["RETURNED"],
+    "CANCELLED": [],
+    "RETURNED": [],
+  };
+
+  const canUpdateStatus = (currentStatus, newStatus) => {
+    if (!currentStatus) return true;
+    const allowed = validTransitions[currentStatus] || [];
+    return allowed.includes(newStatus);
+  };
+
+  const getAllowedNextStates = (currentStatus) => {
+    return validTransitions[currentStatus] || [];
+  };
+
+  /* ===============================
      FETCH ALL ORDERS
      =============================== */
   const fetchOrders = async () => {
@@ -51,7 +74,8 @@ function AdminOrders() {
       });
 
       if (!res.ok) {
-        alert("Failed to update payment status");
+        const error = await res.json();
+        alert(`Failed: ${error.error || error.message}`);
         return;
       }
 
@@ -64,9 +88,15 @@ function AdminOrders() {
   };
 
   /* ===============================
-     UPDATE ORDER STATUS (ADMIN)
+     UPDATE ORDER STATUS (VALIDATED)
      =============================== */
-  const updateOrderStatus = async (id, status) => {
+  const updateOrderStatus = async (id, status, currentStatus) => {
+    if (!canUpdateStatus(currentStatus, status)) {
+      const allowed = getAllowedNextStates(currentStatus);
+      alert(`❌ Cannot change from ${currentStatus} to ${status}.\nAllowed: ${allowed.join(", ") || "None"}`);
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URL}/api/orders/status/${id}`, {
         method: "PATCH",
@@ -75,7 +105,8 @@ function AdminOrders() {
       });
 
       if (!res.ok) {
-        alert("Failed to update order status");
+        const error = await res.json();
+        alert(`Invalid: ${error.error}`);
         return;
       }
 
@@ -88,193 +119,218 @@ function AdminOrders() {
   };
 
   /* ===============================
-     🧾 DOWNLOAD INVOICE (NEW)
+     DOWNLOAD INVOICE
      =============================== */
   const downloadInvoice = (orderId) => {
-    window.open(
-      `${API_URL}/api/orders/invoice/${orderId}`,
-      "_blank"
-    );
+    window.open(`${API_URL}/api/orders/invoice/${orderId}`, "_blank");
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1 style={{ marginBottom: "20px" }}>📦 Orders</h1>
+    <div className="container-fluid py-5" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
+      <div className="container">
+        <div className="row mb-4">
+          <div className="col-12">
+            <h1 className="display-5 fw-bold">
+              <span style={{ fontSize: "2.5rem" }}>📦</span> Order Management
+            </h1>
+            <p className="text-muted fs-6">Manage orders and update payment/shipping status</p>
+          </div>
+        </div>
 
-      {orders.length === 0 ? (
-        <p>No orders found.</p>
-      ) : (
-        orders.map((order) => (
-          <div
-            key={order._id}
-            style={{
-              background: "#ffffff",
-              padding: "20px",
-              borderRadius: "14px",
-              marginBottom: "20px",
-              boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
-            }}
-          >
-            {/* CUSTOMER INFO */}
-            <div style={{ marginBottom: "12px" }}>
-              <strong>👤 Customer:</strong> {order.customer?.name} <br />
-              <strong>📞 Phone:</strong> {order.customer?.phone} <br />
-              <strong>📍 Address:</strong> {order.customer?.address} <br />
-              <strong>🏷️ Pincode:</strong> {order.customer?.pincode}
-            </div>
+        {orders.length === 0 ? (
+          <div className="alert alert-info text-center py-5">
+            <h5>No orders found.</h5>
+          </div>
+        ) : (
+          <div className="row g-4">
+            {orders.map((order) => (
+              <div key={order._id} className="col-12">
+                <div className="card shadow-sm border-0" style={{ borderTop: "4px solid #2563eb" }}>
+                  {/* CARD HEADER */}
+                  <div className="card-header bg-light border-0 py-3">
+                    <div className="row align-items-center g-3">
+                      <div className="col-md-6">
+                        <h6 className="mb-0 text-muted">
+                          <small>ORDER ID:</small>
+                        </h6>
+                        <h5 className="mb-0 fw-bold text-dark">{order._id}</h5>
+                      </div>
+                      <div className="col-md-6 text-md-end">
+                        <span className={`badge ${
+                          order.orderStatus === "DELIVERED" ? "bg-success" :
+                          order.orderStatus === "CANCELLED" ? "bg-danger" :
+                          order.orderStatus === "SHIPPED" || order.orderStatus === "OUT_FOR_DELIVERY" ? "bg-info" :
+                          "bg-warning"
+                        } fs-6`}>
+                          {order.orderStatus || "PLACED"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-            <hr />
+                  {/* CARD BODY */}
+                  <div className="card-body">
+                    {/* CUSTOMER SECTION */}
+                    <div className="row mb-4 pb-3 border-bottom">
+                      <div className="col-md-6">
+                        <h6 className="text-muted fw-bold mb-3">👤 CUSTOMER DETAILS</h6>
+                        <div className="lh-lg">
+                          <div><strong>Name:</strong> <span className="text-dark">{order.customer?.name}</span></div>
+                          <div><strong>Phone:</strong> <span className="text-dark">{order.customer?.phone}</span></div>
+                          <div><strong>Address:</strong> <span className="text-dark">{order.customer?.address}</span></div>
+                          <div><strong>Pincode:</strong> <span className="text-dark">{order.customer?.pincode}</span></div>
+                        </div>
+                      </div>
 
-            {/* ITEMS */}
-            {order.items.map((item, index) => (
-              <div
-                key={index}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: "14px",
-                  marginBottom: "6px",
-                }}
-              >
-                <span>
-                  {item.name} × {item.qty}
-                </span>
-                <span>₹{item.price * item.qty}</span>
-              </div>
-            ))}
+                      {/* ORDER DATES */}
+                      <div className="col-md-6">
+                        <h6 className="text-muted fw-bold mb-3">📅 ORDER INFO</h6>
+                        <div className="lh-lg">
+                          <div><strong>Date:</strong> <span className="text-dark">{new Date(order.createdAt).toLocaleDateString()}</span></div>
+                          <div><strong>Method:</strong> <span className="badge bg-secondary">{order.paymentMethod || "COD"}</span></div>
+                          <div><strong>Payment:</strong> <span className={`badge ${order.paymentStatus === "PAID" ? "bg-success" : order.paymentStatus === "FAILED" ? "bg-danger" : "bg-warning"}`}>
+                            {order.paymentStatus || "PENDING"}
+                          </span></div>
+                        </div>
+                      </div>
+                    </div>
 
-            <hr />
+                    {/* ITEMS SECTION */}
+                    <div className="mb-4">
+                      <h6 className="text-muted fw-bold mb-3">🛍️ ORDER ITEMS</h6>
+                      <div className="table-responsive">
+                        <table className="table table-sm table-hover mb-0">
+                          <thead className="table-light">
+                            <tr>
+                              <th className="text-center" style={{ width: "80px" }}>Image</th>
+                              <th className="text-start">Product</th>
+                              <th className="text-center">Qty</th>
+                              <th className="text-end">Price</th>
+                              <th className="text-end">Subtotal</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {order.items.map((item, index) => (
+                              <tr key={index} className="align-middle">
+                                <td className="text-center">
+                                  <img
+                                    src={item.image || (item.productId && item.productId.image) || "https://via.placeholder.com/60?text=No+Image"}
+                                    alt={item.name}
+                                    style={{
+                                      width: "60px",
+                                      height: "60px",
+                                      objectFit: "cover",
+                                      borderRadius: "6px",
+                                      border: "1px solid #e5e7eb"
+                                    }}
+                                  />
+                                </td>
+                                <td className="text-start fw-500">{item.name}</td>
+                                <td className="text-center"><span className="badge bg-light text-dark">{item.qty}</span></td>
+                                <td className="text-end">₹{Number(item.price).toFixed(2)}</td>
+                                <td className="text-end fw-bold">₹{(item.price * item.qty).toFixed(2)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="row mt-3 pt-3 border-top">
+                        <div className="col-md-8 text-end">
+                          <h6 className="text-muted">TOTAL AMOUNT:</h6>
+                        </div>
+                        <div className="col-md-4 text-end">
+                          <h5 className="fw-bold text-success">₹{Number(order.totalAmount).toFixed(2)}</h5>
+                        </div>
+                      </div>
+                    </div>
 
-            {/* TOTAL */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontWeight: "bold",
-                fontSize: "16px",
-                color: "#15803d",
-              }}
-            >
-              <span>Total</span>
-              <span>₹{order.totalAmount}</span>
-            </div>
+                    {/* PAYMENT ACTIONS */}
+                    <div className="mb-4 p-3 bg-light rounded">
+                      <h6 className="text-muted fw-bold mb-3">💳 PAYMENT ACTIONS</h6>
+                      <div className="d-flex gap-2 flex-wrap">
+                        <button
+                          onClick={() => updatePaymentStatus(order._id, "PAID")}
+                          className="btn btn-sm btn-success"
+                          disabled={order.paymentStatus === "PAID"}
+                        >
+                          ✓ Mark Paid
+                        </button>
+                        <button
+                          onClick={() => updatePaymentStatus(order._id, "FAILED")}
+                          className="btn btn-sm btn-danger"
+                          disabled={order.paymentStatus === "FAILED"}
+                        >
+                          ✗ Mark Failed
+                        </button>
+                        <button
+                          onClick={() => downloadInvoice(order._id)}
+                          className="btn btn-sm btn-info"
+                        >
+                          📄 Invoice
+                        </button>
+                      </div>
+                    </div>
 
-            {/* PAYMENT INFO */}
-            <div
-              style={{
-                marginTop: "10px",
-                fontSize: "14px",
-                background: "#f9fafb",
-                padding: "10px",
-                borderRadius: "8px",
-              }}
-            >
-              <div>
-                <strong>💳 Payment Method:</strong>{" "}
-                {order.paymentMethod || "COD"}
-              </div>
+                    {/* ORDER STATUS ACTIONS */}
+                    <div className="p-3 bg-light rounded">
+                      <h6 className="text-muted fw-bold mb-3">
+                        🚚 ORDER STATUS <span className="badge bg-primary">{order.orderStatus || "PLACED"}</span>
+                      </h6>
+                      <div className="d-flex gap-2 flex-wrap">
+                        {["CONFIRMED", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"].map(
+                          (status) => {
+                            const isAllowed = canUpdateStatus(order.orderStatus || "PLACED", status);
+                            return (
+                              <button
+                                key={status}
+                                disabled={!isAllowed}
+                                onClick={() =>
+                                  updateOrderStatus(
+                                    order._id,
+                                    status,
+                                    order.orderStatus || "PLACED"
+                                  )
+                                }
+                                className={`btn btn-sm ${isAllowed ? "btn-outline-primary" : "btn-outline-secondary disabled"}`}
+                                title={isAllowed ? `Move to ${status}` : `Cannot transition from ${order.orderStatus} to ${status}`}
+                              >
+                                {status.replaceAll("_", " ")}
+                              </button>
+                            );
+                          }
+                        )}
 
-              <div>
-                <strong>📌 Payment Status:</strong>{" "}
-                <span
-                  style={{
-                    fontWeight: "bold",
-                    color:
-                      order.paymentStatus === "PAID"
-                        ? "#16a34a"
-                        : order.paymentStatus === "FAILED"
-                        ? "#dc2626"
-                        : "#ca8a04",
-                  }}
-                >
-                  {order.paymentStatus || "PENDING"}
-                </span>
-              </div>
+                        <button
+                          disabled={!["PLACED", "CONFIRMED", "SHIPPED", "OUT_FOR_DELIVERY"].includes(order.orderStatus || "PLACED")}
+                          onClick={() =>
+                            updateOrderStatus(order._id, "CANCELLED", order.orderStatus || "PLACED")
+                          }
+                          className={`btn btn-sm ${!["DELIVERED", "CANCELLED", "RETURNED"].includes(order.orderStatus || "PLACED") ? "btn-outline-danger" : "btn-outline-secondary disabled"}`}
+                          title={!["DELIVERED", "CANCELLED", "RETURNED"].includes(order.orderStatus || "PLACED") ? "Cancel this order" : "Cannot cancel delivered/cancelled orders"}
+                        >
+                          Cancel Order
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
-              {/* ACTION BUTTONS */}
-              <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
-                <button
-                  onClick={() => updatePaymentStatus(order._id, "PAID")}
-                  style={btnGreen}
-                >
-                  Mark Paid
-                </button>
-
-                <button
-                  onClick={() => updatePaymentStatus(order._id, "FAILED")}
-                  style={btnRed}
-                >
-                  Mark Failed
-                </button>
-
-                {/* 🧾 INVOICE BUTTON (NEW) */}
-                <button
-                  onClick={() => downloadInvoice(order._id)}
-                  style={btnBlue}
-                >
-                  Download Invoice
-                </button>
-                {/* ORDER STATUS ACTIONS */}
-                <div style={{ display: "flex", gap: "6px" }}>
-                  <button onClick={() => updateOrderStatus(order._id, "CONFIRMED")} style={btnOutline}>Confirm</button>
-                  <button onClick={() => updateOrderStatus(order._id, "SHIPPED")} style={btnOutline}>Shipped</button>
-                  <button onClick={() => updateOrderStatus(order._id, "OUT_FOR_DELIVERY")} style={btnOutline}>Out for Delivery</button>
-                  <button onClick={() => updateOrderStatus(order._id, "DELIVERED")} style={btnOutline}>Delivered</button>
-                  <button onClick={() => updateOrderStatus(order._id, "CANCELLED")} style={btnRed}>Cancel</button>
+                  {/* CARD FOOTER */}
+                  <div className="card-footer bg-light border-top py-3 text-end">
+                    <button
+                      onClick={() => handleDelete(order._id)}
+                      className="btn btn-sm btn-outline-danger"
+                    >
+                      🗑️ Delete Order
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* DELETE */}
-            <div style={{ marginTop: "14px", textAlign: "right" }}>
-              <button onClick={() => handleDelete(order._id)} style={btnRed}>
-                Delete Order
-              </button>
-            </div>
+            ))}
           </div>
-        ))
-      )}
+        )}
+      </div>
     </div>
   );
 }
-
-/* ===============================
-   BUTTON STYLES
-   =============================== */
-const btnGreen = {
-  padding: "6px 12px",
-  background: "#16a34a",
-  color: "#fff",
-  border: "none",
-  borderRadius: "6px",
-  cursor: "pointer",
-};
-
-const btnRed = {
-  padding: "6px 12px",
-  background: "#dc2626",
-  color: "#fff",
-  border: "none",
-  borderRadius: "6px",
-  cursor: "pointer",
-};
-
-const btnBlue = {
-  padding: "6px 12px",
-  background: "#2563eb",
-  color: "#fff",
-  border: "none",
-  borderRadius: "6px",
-  cursor: "pointer",
-};
-
-const btnOutline = {
-  padding: "6px 10px",
-  background: "transparent",
-  color: "#111827",
-  border: "1px solid #e5e7eb",
-  borderRadius: "6px",
-  cursor: "pointer",
-};
 
 export default AdminOrders;
