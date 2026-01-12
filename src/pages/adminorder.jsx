@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
 
+/**
+ * AdminOrders
+ * Main React component for the admin order management page.
+ * - Fetches and displays all orders from the backend.
+ * - Provides actions to update payment status, update order status,
+ *   download invoices and delete orders.
+ * - Enforces valid status transitions before sending updates.
+ */
 function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -17,12 +25,22 @@ function AdminOrders() {
     "RETURNED": [],
   };
 
+  /**
+   * canUpdateStatus
+   * Determine whether an order may transition from `currentStatus` to `newStatus`.
+   * Returns `true` when the transition is allowed per `validTransitions` map.
+   */
   const canUpdateStatus = (currentStatus, newStatus) => {
     if (!currentStatus) return true;
     const allowed = validTransitions[currentStatus] || [];
     return allowed.includes(newStatus);
   };
 
+  /**
+   * getAllowedNextStates
+   * Return the list of allowed next statuses for a given `currentStatus`.
+   * Used to inform the admin which transitions are valid.
+   */
   const getAllowedNextStates = (currentStatus) => {
     return validTransitions[currentStatus] || [];
   };
@@ -30,6 +48,11 @@ function AdminOrders() {
   /* ===============================
      FETCH ALL ORDERS
      =============================== */
+  /**
+   * fetchOrders
+   * Fetch all orders from the API and update component state (`orders`).
+   * Called on mount and after mutations to refresh the list.
+   */
   const fetchOrders = async () => {
     try {
       const res = await fetch(`${API_URL}/api/orders`);
@@ -47,6 +70,10 @@ function AdminOrders() {
   /* ===============================
      DELETE ORDER
      =============================== */
+  /**
+   * handleDelete
+   * Delete an order by `id` after user confirmation, then refresh list.
+   */
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this order?")) return;
 
@@ -65,6 +92,11 @@ function AdminOrders() {
   /* ===============================
      UPDATE PAYMENT STATUS
      =============================== */
+  /**
+   * updatePaymentStatus
+   * Patch the payment status for order `id` to `status` (e.g., PAID, FAILED).
+   * Alerts the user on success/failure and refreshes the orders list.
+   */
   const updatePaymentStatus = async (id, status) => {
     try {
       const res = await fetch(`${API_URL}/api/orders/payment/${id}`, {
@@ -90,6 +122,11 @@ function AdminOrders() {
   /* ===============================
      UPDATE ORDER STATUS (VALIDATED)
      =============================== */
+  /**
+   * updateOrderStatus
+   * Validate the requested status transition from `currentStatus` to `status`.
+   * If valid, send a patch to update the order status and refresh the list.
+   */
   const updateOrderStatus = async (id, status, currentStatus) => {
     if (!canUpdateStatus(currentStatus, status)) {
       const allowed = getAllowedNextStates(currentStatus);
@@ -121,6 +158,10 @@ function AdminOrders() {
   /* ===============================
      DOWNLOAD INVOICE
      =============================== */
+  /**
+   * downloadInvoice
+   * Open the invoice PDF for `orderId` in a new browser tab/window.
+   */
   const downloadInvoice = (orderId) => {
     window.open(`${API_URL}/api/orders/invoice/${orderId}`, "_blank");
   };

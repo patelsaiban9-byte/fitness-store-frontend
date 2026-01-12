@@ -110,8 +110,12 @@ function Cart() {
               <div className="ms-3">
                 <h5 className="mb-0 d-flex align-items-center gap-3">
                   <span className="fw-bold">{item.name}</span>
-                  <small className="text-muted">Qty: {item.qty}</small>
-                  <span className="ms-3 text-muted">Price: ₹{item.price}</span>
+
+                  {/* Price then Quantity, centered together */}
+                  <div className="ms-3 d-flex align-items-center justify-content-center gap-3 text-center">
+                    <span className="text-muted">Price: ₹{item.price}</span>
+                    <small className="text-muted">Qty: {item.qty}</small>
+                  </div>
                 </h5>
               </div>
             </div>
