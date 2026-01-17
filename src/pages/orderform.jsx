@@ -10,6 +10,7 @@ function OrderForm() {
 
   const [formData, setFormData] = useState({
     name: "",
+    email: "",
     address: "",
     phone: "",
     landmark: "",
@@ -37,9 +38,10 @@ function OrderForm() {
   };
 
   const validateForm = () => {
-    const { name, address, phone, pincode } = formData;
+    const { name, email, address, phone, pincode } = formData;
 
     if (name.trim().length < 3) return alert("Name must be at least 3 characters");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return alert("Please enter a valid email");
     if (address.trim().length < 5) return alert("Address must be at least 5 characters");
     if (!/^[0-9]{10}$/.test(phone)) return alert("Phone must be 10 digits");
     if (!/^[0-9]{6}$/.test(pincode)) return alert("Pincode must be 6 digits");
@@ -67,6 +69,7 @@ function OrderForm() {
       userId: localStorage.getItem("userId"),
       customer: {
         name: formData.name,
+        email: formData.email,
         phone: formData.phone,
         address: formData.address,
         pincode: formData.pincode,
@@ -131,11 +134,12 @@ function OrderForm() {
         </div>
 
         <form onSubmit={handleOrder}>
-          <input name="name" placeholder="Your Name" onChange={handleChange} style={inputStyle} />
-          <input name="address" placeholder="Your Address" onChange={handleChange} style={inputStyle} />
-          <input name="phone" placeholder="Phone Number" onChange={handleChange} style={inputStyle} />
+          <input name="name" placeholder="Your Name" onChange={handleChange} style={inputStyle} required />
+          <input name="email" type="email" placeholder="Your Email" onChange={handleChange} style={inputStyle} required />
+          <input name="address" placeholder="Your Address" onChange={handleChange} style={inputStyle} required />
+          <input name="phone" placeholder="Phone Number" onChange={handleChange} style={inputStyle} required />
           <input name="landmark" placeholder="Landmark" onChange={handleChange} style={inputStyle} />
-          <input name="pincode" placeholder="Pincode" onChange={handleChange} style={inputStyle} />
+          <input name="pincode" placeholder="Pincode" onChange={handleChange} style={inputStyle} required />
 
           <div style={{ marginBottom: "16px" }}>
             <strong>Payment Method</strong>
