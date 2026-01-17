@@ -1,110 +1,167 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import "./home.css";
 
 function Home() {
   const navigate = useNavigate();
 
   return (
-    // Added py-5 for top/bottom padding and min-vh-100 for full-screen feel
-    <div className="container py-5 min-vh-100">
+    <div className="home-page">
       
-      {/* 🌟 Enhanced Hero Section (Jumbotron) */}
-      <div className="row justify-content-center mb-5">
-        <div className="col-lg-10">
-          {/* Using Jumbotron styling (Bootstrap 5.2 equivalent) */}
-          <div className="p-5 bg-dark text-white rounded-5 shadow-lg border border-success border-4">
-            <div className="row align-items-center">
-              <div className="col-md-7 text-start">
-                {/* Larger, Bolder Title */}
-                <h1 className="display-4 fw-bolder mb-3 text-warning">Fuel Your Success</h1>
-                {/* Better call to action description */}
-                <p className="lead text-light mb-4">
-                  Unlock your full potential with our premium range of supplements, gear, and expert-approved essentials. Your fitness journey starts here.
-                </p>
-                <button
+      {/* Hero Section */}
+      <section className="hero-section">
+        <div className="hero-overlay"></div>
+        <div className="container hero-content">
+          <div className="row align-items-center">
+            <div className="col-lg-6 hero-text">
+              <h1 className="hero-title">Fuel Your Success</h1>
+              <p className="hero-subtitle">Transform Your Body, Transform Your Life</p>
+              <p className="hero-description">
+                Unlock your full potential with our premium range of supplements, gear, and expert-approved essentials. Your fitness journey starts here.
+              </p>
+              <div className="hero-buttons">
+                <button 
                   onClick={() => navigate("/products")}
-                  className="btn btn-warning btn-lg mt-2 px-5 fw-bold text-dark text-uppercase"
-                  style={{ fontSize: '1.1rem' }}
+                  className="btn btn-light btn-lg"
                 >
-                  Explore Products &rarr;
+                  Explore Products
+                </button>
+                <button 
+                  onClick={() => navigate("/about")}
+                  className="btn btn-outline-light btn-lg"
+                >
+                  Learn More
                 </button>
               </div>
-              <div className="col-md-5 d-none d-md-block text-center">
-                 {/* Placeholder for an image or large icon */}
-                 <div className="p-4 bg-success rounded-3 display-1 fw-bold">🏋️</div>
+            </div>
+            <div className="col-lg-6 hero-icon">
+              <div className="icon-display">
+                <span>🏋️</span>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* --- */}
-
-      {/* 🔥 Why Choose Us Section - Distinct Heading Style */}
-      <h2 className="text-center display-6 fw-bold mb-2 text-dark">Why Our Customers Choose Us</h2>
-      <p className="text-center text-secondary mb-5 lead">
-        Commitment to quality, speed, and exceptional support.
-      </p>
-
-      {/* Features Section - Responsive Grid with Gap */}
-      <div className="row g-4 mb-5">
-        
-        {/* Feature Card 1: Quality Products */}
-        <div className="col-lg-4 col-md-6">
-          <div className="card h-100 shadow border-0 bg-light text-center p-3">
-            <div className="card-body">
-              <span className="text-success display-6 mb-3 d-block">✅</span>
-              <h5 className="card-title fw-bold fs-5 text-dark">Premium Quality Assured</h5>
-              <p className="card-text text-secondary">
-                We only source lab-tested and certified supplements and durable equipment.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Feature Card 2: Fast Delivery */}
-        <div className="col-lg-4 col-md-6">
-          <div className="card h-100 shadow border-0 bg-light text-center p-3">
-            <div className="card-body">
-              <span className="text-primary display-6 mb-3 d-block">🚀</span>
-              <h5 className="card-title fw-bold fs-5 text-dark">Lightning Fast Delivery</h5>
-              <p className="card-text text-secondary">
-                Quick shipping across the nation so you don't miss a single workout.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Feature Card 3: Customer Trust */}
-        <div className="col-lg-4 col-md-12">
-          <div className="card h-100 shadow border-0 bg-light text-center p-3">
-            <div className="card-body">
-              <span className="text-danger display-6 mb-3 d-block">🤝</span>
-              <h5 className="card-title fw-bold fs-5 text-dark">Dedicated Support Team</h5>
-              <p className="card-text text-secondary">
-                Our experts are ready to assist you with advice on products and training.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* --- */}
-
-      {/* 📣 Call-to-Action Banner */}
-      <div className="row justify-content-center">
-          <div className="col-lg-10">
-              <div className="p-4 bg-warning rounded-3 shadow-sm d-flex justify-content-between align-items-center flex-column flex-md-row">
-                  <h3 className="h4 fw-bold mb-3 mb-md-0 text-dark">Ready to take the next step?</h3>
-                  <button
-                      onClick={() => navigate("/products")}
-                      className="btn btn-dark btn-lg fw-bold"
-                  >
-                      Get Started Now
-                  </button>
+      {/* Features Section */}
+      <section className="features-section">
+        <div className="container">
+          <h2 className="section-title">Why Choose Us</h2>
+          <p className="section-subtitle">Commitment to quality, speed, and exceptional support</p>
+          
+          <div className="row g-4 mt-4">
+            
+            {/* Feature 1 */}
+            <div className="col-lg-4 col-md-6">
+              <div className="feature-card">
+                <div className="feature-icon quality-icon">
+                  <span>✅</span>
+                </div>
+                <h3 className="feature-title">Premium Quality</h3>
+                <p className="feature-text">
+                  Lab-tested and certified supplements with durable, high-quality equipment
+                </p>
               </div>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="col-lg-4 col-md-6">
+              <div className="feature-card">
+                <div className="feature-icon delivery-icon">
+                  <span>🚀</span>
+                </div>
+                <h3 className="feature-title">Fast Delivery</h3>
+                <p className="feature-text">
+                  Quick shipping across the nation so you never miss a workout
+                </p>
+              </div>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="col-lg-4 col-md-6">
+              <div className="feature-card">
+                <div className="feature-icon support-icon">
+                  <span>🤝</span>
+                </div>
+                <h3 className="feature-title">Expert Support</h3>
+                <p className="feature-text">
+                  Dedicated team ready to assist with product advice and training tips
+                </p>
+              </div>
+            </div>
           </div>
-      </div>
+        </div>
+      </section>
+
+      {/* Trending Products Preview */}
+      <section className="trending-section">
+        <div className="container">
+          <h2 className="section-title">Trending Now</h2>
+          <p className="section-subtitle">Check out what's popular with our community</p>
+          
+          <div className="row g-4 mt-4">
+            {[
+              { icon: '💊', title: 'Protein Supplements', desc: 'Premium whey & plant-based options' },
+              { icon: '🏃', title: 'Fitness Gear', desc: 'Latest workout equipment & accessories' },
+              { icon: '📖', title: 'Training Guides', desc: 'Expert-created workout programs' },
+              { icon: '⚡', title: 'Energy Boosters', desc: 'Pre-workout and recovery products' }
+            ].map((item, idx) => (
+              <div key={idx} className="col-lg-3 col-md-6">
+                <div className="trending-card">
+                  <div className="trending-icon">{item.icon}</div>
+                  <h4 className="trending-title">{item.title}</h4>
+                  <p className="trending-desc">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="stats-section">
+        <div className="container">
+          <div className="row g-4">
+            {[
+              { stat: '10K+', label: 'Happy Customers' },
+              { stat: '500+', label: 'Premium Products' },
+              { stat: '50+', label: 'Expert Trainers' },
+              { stat: '24/7', label: 'Customer Support' }
+            ].map((item, idx) => (
+              <div key={idx} className="col-lg-3 col-md-6">
+                <div className="stat-card">
+                  <div className="stat-number">{item.stat}</div>
+                  <div className="stat-label">{item.label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="cta-banner">
+        <div className="container">
+          <div className="cta-content">
+            <h2 className="cta-title">Ready to Transform?</h2>
+            <p className="cta-subtitle">Join thousands of fitness enthusiasts on their journey to success</p>
+            <div className="cta-buttons">
+              <button 
+                onClick={() => navigate("/products")}
+                className="btn btn-light btn-lg"
+              >
+                Start Shopping
+              </button>
+              <button 
+                onClick={() => navigate("/register")}
+                className="btn btn-outline-light btn-lg"
+              >
+                Create Account
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
 
     </div>
   );

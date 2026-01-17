@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import "./auth.css";
 
 // Helper component for the Bootstrap Toast
 const Toast = ({ message, type, show, onClose }) => {
@@ -79,6 +80,9 @@ function Login({ setIsLoggedIn, setUserRole }) {
       localStorage.setItem("phone", data.user.phone);
       localStorage.setItem("name", data.user.name);
 
+      // 🛒 Clear cart on login (each user has their own cart)
+      localStorage.removeItem("cart");
+
       setIsLoggedIn(true);
       setUserRole(data.user.role);
 
@@ -98,7 +102,7 @@ function Login({ setIsLoggedIn, setUserRole }) {
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
+    <div className="auth-page">
       <Toast
         message={toast.message}
         type={toast.type}
@@ -106,67 +110,89 @@ function Login({ setIsLoggedIn, setUserRole }) {
         onClose={() => setToast({ ...toast, show: false })}
       />
 
-      <div
-        className="card shadow-lg border-0 p-4 w-100"
-        style={{ maxWidth: "420px" }}
-      >
-        <h3 className="text-center mb-4 fw-bold text-primary">
-          🔐 Welcome Back!
-        </h3>
-
-        {error && (
-          <div className="alert alert-danger text-center">{error}</div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <label className="form-label fw-semibold">
-              Email Address
-            </label>
-            <input
-              type="email"
-              className="form-control form-control-lg"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              required
-            />
+      <div className="auth-container">
+        <div className="auth-content">
+          {/* Left Side */}
+          <div className="auth-side auth-side-left">
+            <div className="auth-branding">
+              <h2 className="auth-title">Welcome Back</h2>
+              <p className="auth-subtitle">Sign in to your account to continue</p>
+              <div className="auth-features">
+                <div className="feature">
+                  <span>✓</span> Access Your Account
+                </div>
+                <div className="feature">
+                  <span>✓</span> Track Your Orders
+                </div>
+                <div className="feature">
+                  <span>✓</span> Exclusive Deals
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="mb-3">
-            <label className="form-label fw-semibold">
-              Password
-            </label>
-            <input
-              type="password"
-              className="form-control form-control-lg"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-            />
+          {/* Right Side - Form */}
+          <div className="auth-side auth-side-right">
+            <div className="auth-form-wrapper">
+              <div className="auth-form-header">
+                <h3 className="auth-form-title">Sign In</h3>
+              </div>
+
+              {error && (
+                <div className="alert alert-danger text-center mb-3">{error}</div>
+              )}
+
+              <form onSubmit={handleSubmit} className="auth-form">
+                <div className="form-group">
+                  <label className="form-label">Email Address</label>
+                  <div className="input-wrapper">
+                    <span className="input-icon">✉️</span>
+                    <input
+                      type="email"
+                      className="form-input"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Password</label>
+                  <div className="input-wrapper">
+                    <span className="input-icon">🔒</span>
+                    <input
+                      type="password"
+                      className="form-input"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button type="submit" className="auth-button">
+                  Sign In
+                </button>
+              </form>
+
+              <div className="auth-divider">or</div>
+
+              <p className="auth-link">
+                Don't have an account?{" "}
+                <Link to="/register" className="link-primary">
+                  Create one now
+                </Link>
+              </p>
+            </div>
           </div>
-
-          <button
-            type="submit"
-            className="btn btn-primary btn-lg w-100"
-          >
-            Sign In
-          </button>
-        </form>
-
-        <p className="mt-3 text-center">
-          New user?{" "}
-          <Link
-            to="/register"
-            className="fw-semibold text-decoration-none text-primary"
-          >
-            Create an Account
-          </Link>
-        </p>
+        </div>
       </div>
     </div>
   );
 }
 
 export default Login;
+

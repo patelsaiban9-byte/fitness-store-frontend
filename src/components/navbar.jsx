@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Logo } from "../assets/logo";
 
 function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
   const navigate = useNavigate();
@@ -36,6 +37,9 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
     localStorage.removeItem("role");
     localStorage.removeItem("email");
     localStorage.removeItem("phone");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("name");
+    localStorage.removeItem("cart");
     setIsLoggedIn(false);
     setUserRole(null);
     navigate("/login");
@@ -51,12 +55,14 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
       <div className="container-fluid px-3 px-md-4">
         {/* BRAND */}
         <Link
-          className="navbar-brand fw-bolder fs-5 d-flex align-items-center"
+          className="navbar-brand fw-bolder fs-5 d-flex align-items-center gap-2"
           to="/"
           onClick={() => setIsOpen(false)}
+          style={{ textDecoration: 'none', color: 'white', transition: 'all 0.3s ease' }}
         >
-          <span className="text-warning me-2 fs-4">💪</span>
-          Health & Fitness Store
+          <Logo size={40} />
+          <span className="d-none d-sm-inline">Health & Fitness Store</span>
+          <span className="d-sm-none fs-6">FitHub</span>
         </Link>
 
         {/* TOGGLER */}

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import "./auth.css";
 
 // Reusing the Toast component structure for consistent feedback
 const Toast = ({ message, type, show, onClose }) => {
@@ -24,6 +25,7 @@ const Toast = ({ message, type, show, onClose }) => {
 };
 
 function Register() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -45,6 +47,11 @@ function Register() {
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   const validateForm = () => {
+    if (!name.trim()) {
+      setError("❌ Please enter your name.");
+      return false;
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError("❌ Please enter a valid email address.");
@@ -74,7 +81,7 @@ function Register() {
       const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, phone, password }),
+        body: JSON.stringify({ name, email, phone, password }),
       });
 
       const data = await res.json();
@@ -99,88 +106,128 @@ function Register() {
   };
 
   return (
-    // Centered horizontally and vertically using d-flex, min-vh-100, etc.
-    <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
-        
-      {/* Toast Notification */}
+    <div className="auth-page">
       <Toast 
         message={toast.message} 
         type={toast.type} 
         show={toast.show} 
         onClose={() => setToast({ ...toast, show: false })} 
       />
-        
-      <div
-        // Container for the form, styled as a card
-        className="card shadow-lg border-0 p-4 w-100"
-        style={{ maxWidth: "420px" }}
-      >
-        <h3 className="text-center mb-4 fw-bold text-success">📝 Register</h3>
-        
-        {/* Bootstrap Alert for error message */}
-        {error && (
-          <div className="alert alert-danger text-center">{error}</div>
-        )}
 
-        <form onSubmit={handleSubmit}>
-          
-          {/* Email Field */}
-          <div className="mb-3">
-            <label className="form-label fw-semibold">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="form-control form-control-lg"
-              placeholder="Enter your email"
-              required
-            />
+      <div className="auth-container">
+        <div className="auth-content">
+          {/* Left Side */}
+          <div className="auth-side auth-side-left">
+            <div className="auth-branding">
+              <h2 className="auth-title">Join Us Today</h2>
+              <p className="auth-subtitle">Start your fitness journey with us</p>
+              <div className="auth-features">
+                <div className="feature">
+                  <span>✓</span> Premium Products
+                </div>
+                <div className="feature">
+                  <span>✓</span> Expert Support
+                </div>
+                <div className="feature">
+                  <span>✓</span> Member Benefits
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Phone Field */}
-          <div className="mb-3">
-            <label className="form-label fw-semibold">Phone</label>
-            <input
-              type="text"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="form-control form-control-lg"
-              placeholder="Enter 10 digit phone number"
-              maxLength="10"
-              required
-            />
-          </div>
+          {/* Right Side - Form */}
+          <div className="auth-side auth-side-right">
+            <div className="auth-form-wrapper">
+              <div className="auth-form-header">
+                <h3 className="auth-form-title">Create Account</h3>
+              </div>
 
-          {/* Password Field */}
-          <div className="mb-4">
-            <label className="form-label fw-semibold">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="form-control form-control-lg"
-              placeholder="Minimum 6 characters"
-              required
-            />
-          </div>
+              {error && (
+                <div className="alert alert-danger text-center mb-3">{error}</div>
+              )}
 
-          <button
-            type="submit"
-            className="btn btn-success btn-lg w-100 fw-bold"
-          >
-            Create Account
-          </button>
-        </form>
-        
-        <p className="mt-3 text-center">
-          Already have an account?{" "}
-          <Link
-            to="/login"
-            className="fw-semibold text-decoration-none text-success"
-          >
-            Login here
-          </Link>
-        </p>
+              <form onSubmit={handleSubmit} className="auth-form">
+                <div className="form-group">
+                  <label className="form-label">Full Name</label>
+                  <div className="input-wrapper">
+                    <span className="input-icon">👤</span>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Enter your full name"
+                      autoComplete="name"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Email Address</label>
+                  <div className="input-wrapper">
+                    <span className="input-icon">✉️</span>
+                    <input
+                      type="email"
+                      className="form-input"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      autoComplete="email"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Phone Number</label>
+                  <div className="input-wrapper">
+                    <span className="input-icon">📱</span>
+                    <input
+                      type="tel"
+                      className="form-input"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="10 digit phone number"
+                      maxLength="10"
+                      autoComplete="tel"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Password</label>
+                  <div className="input-wrapper">
+                    <span className="input-icon">🔒</span>
+                    <input
+                      type="password"
+                      className="form-input"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Minimum 6 characters"
+                      autoComplete="new-password"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button type="submit" className="auth-button">
+                  Create Account
+                </button>
+              </form>
+
+              <div className="auth-divider">or</div>
+
+              <p className="auth-link">
+                Already have an account?{" "}
+                <Link to="/login" className="link-primary">
+                  Sign in here
+                </Link>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
