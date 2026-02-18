@@ -13,13 +13,63 @@ import { useNavigate } from "react-router-dom";
 
 function Cart() {
   const [cart, setCart] = useState([]);
+  const [products, setProducts] = useState({});
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-  // Load cart from localStorage on page load
+  // Load cart from localStorage and fetch product data on page load
   useEffect(() => {
-    const storedCart =
-      JSON.parse(localStorage.getItem("cart")) || [];
-    setCart(storedCart);
+    const fetchProductData = async () => {
+      try {
+        const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+        setCart(storedCart);
+
+        // Fetch current product data for stock validation
+        if (storedCart.length > 0) {
+          const productIds = storedCart.map(item => item._id);
+          const res = await fetch(`${API_URL}/api/products`);
+          const allProducts = await res.json();
+          
+          // Create a map of product ID to product data
+          const productMap = {};
+          allProducts.forEach(p => {
+            productMap[p._id] = p;
+          });
+          setProducts(productMap);
+
+          // Validate cart items against current stock (only if stock is being tracked)
+          const validatedCart = storedCart.map(item => {
+            const currentProduct = productMap[item._id];
+            // Only validate if product exists and stock is actively managed (not undefined/null)
+            if (currentProduct && currentProduct.stock != null && currentProduct.stock > 0) {
+              if (item.qty > currentProduct.stock) {
+                return { ...item, qty: currentProduct.stock };
+              }
+            }
+            return item;
+          }).filter(item => {
+            const currentProduct = productMap[item._id];
+            // Only remove if stock is explicitly 0 (not undefined/null)
+            if (!currentProduct) return false;
+            if (currentProduct.stock != null && currentProduct.stock === 0) return false;
+            return true;
+          });
+
+          // Update cart if items were adjusted
+          if (JSON.stringify(validatedCart) !== JSON.stringify(storedCart)) {
+            updateCart(validatedCart);
+            alert("Some items in your cart were adjusted based on current stock availability.");
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching product data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProductData();
   }, []);
 
   // Update localStorage + state together
@@ -33,6 +83,17 @@ function Cart() {
 
   // Increase quantity
   const increaseQty = (id) => {
+    const item = cart.find(item => item._id === id);
+    const currentProduct = products[id];
+    
+    // Only enforce stock limit if stock is actively managed (not undefined/null and > 0)
+    if (currentProduct && currentProduct.stock != null && currentProduct.stock > 0) {
+      if (item.qty >= currentProduct.stock) {
+        alert(`Sorry, only ${currentProduct.stock} units available in stock.`);
+        return;
+      }
+    }
+
     const updatedCart = cart.map((item) =>
       item._id === id
         ? { ...item, qty: item.qty + 1 }
@@ -75,6 +136,14 @@ function Cart() {
   };
 
   // If cart empty
+  if (loading) {
+    return (
+      <div className="container py-5 text-center">
+        <div className="spinner-border text-primary"></div>
+      </div>
+    );
+  }
+
   if (cart.length === 0) {
     return (
       <div className="container py-5 text-center">
@@ -117,6 +186,22 @@ function Cart() {
                     <small className="text-muted">Qty: {item.qty}</small>
                   </div>
                 </h5>
+                {/* Stock warning - only show if stock is being tracked */}
+                {products[item._id] && products[item._id].stock != null && (
+                  <div className="mt-2">
+                    {products[item._id].stock === 0 ? (
+                      <span className="badge bg-danger">Out of Stock</span>
+                    ) : products[item._id].stock <= (products[item._id].minimumStockThreshold || 5) ? (
+                      <span className="badge bg-warning text-dark">
+                        Only {products[item._id].stock} left
+                      </span>
+                    ) : item.qty >= products[item._id].stock ? (
+                      <span className="badge bg-warning text-dark">
+                        Max stock reached
+                      </span>
+                    ) : null}
+                  </div>
+                )}
               </div>
             </div>
 

@@ -136,16 +136,48 @@ function Product() {
                     ₹{product.price}
                   </h6>
 
+                  {/* STOCK STATUS - Only show if stock is being tracked */}
+                  {product.stock != null && (
+                    <div className="mt-2 mb-2">
+                      {product.stock === 0 ? (
+                        <span className="badge bg-danger">Out of Stock</span>
+                      ) : product.stock <= (product.minimumStockThreshold || 5) ? (
+                        <span className="badge bg-warning text-dark">
+                          Low Stock: {product.stock} left
+                        </span>
+                      ) : (
+                        <span className="badge bg-success">In Stock</span>
+                      )}
+                    </div>
+                  )}
+
                   {/* ADD TO CART BUTTON - ONLY FOR REGULAR USERS */}
                   {userRole !== "admin" && (
                     <button
                       className="btn btn-success mt-2 w-100"
+                      disabled={product.stock != null && product.stock === 0}
                       onClick={(e) => {
                         e.stopPropagation();
+                        
+                        // Check stock availability (only if stock is being tracked)
+                        if (product.stock != null && product.stock === 0) {
+                          alert("Sorry, this product is out of stock!");
+                          return;
+                        }
+
                         const cart = JSON.parse(localStorage.getItem("cart")) || [];
                         const existingItem = cart.find(
                           (item) => item._id === product._id
                         );
+
+                        // Check if adding to cart would exceed available stock (only if stock is tracked)
+                        if (product.stock != null && product.stock > 0) {
+                          const currentQtyInCart = existingItem ? existingItem.qty : 0;
+                          if (currentQtyInCart >= product.stock) {
+                            alert(`Sorry, only ${product.stock} units available. You already have ${currentQtyInCart} in your cart.`);
+                            return;
+                          }
+                        }
 
                         if (existingItem) {
                           existingItem.qty += 1;
@@ -163,8 +195,12 @@ function Product() {
                         window.dispatchEvent(new Event("storage"));
                         alert(`${product.name} added to cart!`);
                       }}
+                      style={{
+                        opacity: (product.stock != null && product.stock === 0) ? 0.5 : 1,
+                        cursor: (product.stock != null && product.stock === 0) ? "not-allowed" : "pointer",
+                      }}
                     >
-                      🛒 Add to Cart
+                      {(product.stock != null && product.stock === 0) ? "Out of Stock" : "🛒 Add to Cart"}
                     </button>
                   )}
                 </div>

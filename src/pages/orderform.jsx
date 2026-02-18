@@ -95,8 +95,16 @@ function OrderForm() {
         body: JSON.stringify(payload),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        alert("Failed to place order");
+        // Show specific error messages from backend
+        if (data.error === "Insufficient stock" && data.details) {
+          const errorMsg = "Stock Unavailable:\n" + data.details.join("\n");
+          alert(errorMsg);
+        } else {
+          alert(data.error || "Failed to place order");
+        }
         return;
       }
 

@@ -28,6 +28,8 @@ function Admin() {
     description: "",
     price: "",
     image: "",
+    stock: "",
+    minimumStockThreshold: "",
   });
   const [editingId, setEditingId] = useState(null);
   const [toast, setToast] = useState({ show: false, message: "", type: "info" });
@@ -110,7 +112,7 @@ function Admin() {
           editingId ? "Product updated successfully!" : "Product added successfully!",
           "success"
         );
-        setForm({ name: "", description: "", price: "", image: "" });
+        setForm({ name: "", description: "", price: "", image: "", stock: "", minimumStockThreshold: "" });
         setEditingId(null);
         fetchProducts();
       } else {
@@ -154,6 +156,8 @@ function Admin() {
       description: product.description,
       price: product.price,
       image: product.image,
+      stock: product.stock || 0,
+      minimumStockThreshold: product.minimumStockThreshold || 5,
     });
     setEditingId(product._id);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -250,6 +254,46 @@ function Admin() {
               />
             </div>
 
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label htmlFor="stock" className="form-label">
+                  📦 Stock Quantity
+                </label>
+                <input
+                  id="stock"
+                  type="number"
+                  name="stock"
+                  placeholder="Available Stock (leave empty to not track)"
+                  value={form.stock}
+                  onChange={handleChange}
+                  className="form-control"
+                  min="0"
+                />
+                <small className="text-muted">
+                  Leave empty to allow unlimited purchases
+                </small>
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <label htmlFor="minimumStockThreshold" className="form-label">
+                  ⚠️ Low Stock Alert Threshold
+                </label>
+                <input
+                  id="minimumStockThreshold"
+                  type="number"
+                  name="minimumStockThreshold"
+                  placeholder="Minimum Stock Level"
+                  value={form.minimumStockThreshold}
+                  onChange={handleChange}
+                  className="form-control"
+                  min="0"
+                />
+                <small className="text-muted">
+                  Email alert when stock reaches this level (only if tracking stock)
+                </small>
+              </div>
+            </div>
+
             <div className="mb-3">
               <label htmlFor="image" className="form-label">
                 Product Image (Upload new to replace)
@@ -290,6 +334,8 @@ function Admin() {
                     description: "",
                     price: "",
                     image: "",
+                    stock: "",
+                    minimumStockThreshold: "",
                   });
                 }}
               >
@@ -308,6 +354,7 @@ function Admin() {
               <th>Name</th>
               <th>Description</th>
               <th>Price</th>
+              <th>Stock Status</th>
               <th>Image</th>
               <th>Actions</th>
             </tr>
@@ -318,6 +365,26 @@ function Admin() {
                 <td>{p.name}</td>
                 <td>{p.description}</td>
                 <td>₹{p.price}</td>
+                <td>
+                  {p.stock == null ? (
+                    <span className="badge bg-secondary">Stock Not Tracked</span>
+                  ) : p.stock === 0 ? (
+                    <span className="badge bg-danger">Out of Stock</span>
+                  ) : p.stock <= (p.minimumStockThreshold || 5) ? (
+                    <span className="badge bg-warning text-dark">
+                      Low Stock: {p.stock} units
+                    </span>
+                  ) : (
+                    <span className="badge bg-success">
+                      In Stock: {p.stock} units
+                    </span>
+                  )}
+                  {p.stock != null && (
+                    <div className="small text-muted mt-1">
+                      Alert at: {p.minimumStockThreshold || 5} units
+                    </div>
+                  )}
+                </td>
                 <td>
                   {p.image && (
                     <img

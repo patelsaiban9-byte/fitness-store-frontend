@@ -49,11 +49,26 @@ function ProductDetail() {
      ADD TO CART (OLD – SAME)
      =============================== */
   const addToCart = () => {
+    // Check stock availability (only if stock is being tracked)
+    if (product.stock != null && product.stock === 0) {
+      alert("Sorry, this product is out of stock!");
+      return;
+    }
+
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
 
     const existingItem = cart.find(
       (item) => item._id === product._id
     );
+
+    // Check if adding to cart would exceed available stock (only if stock is tracked)
+    if (product.stock != null && product.stock > 0) {
+      const currentQtyInCart = existingItem ? existingItem.qty : 0;
+      if (currentQtyInCart >= product.stock) {
+        alert(`Sorry, only ${product.stock} units available. You already have ${currentQtyInCart} in your cart.`);
+        return;
+      }
+    }
 
     if (existingItem) {
       existingItem.qty += 1;
@@ -75,6 +90,12 @@ function ProductDetail() {
      BUY NOW (OLD FIX – SAME)
      =============================== */
   const buyNow = () => {
+    // Check stock availability (only if stock is being tracked)
+    if (product.stock != null && product.stock === 0) {
+      alert("Sorry, this product is out of stock!");
+      return;
+    }
+
     const cart = [
       {
         _id: product._id,
@@ -150,6 +171,21 @@ function ProductDetail() {
             ₹{product.price}
           </h4>
 
+          {/* STOCK STATUS - Only show if stock is being tracked */}
+          {product.stock != null && (
+            <div className="mb-3">
+              {product.stock === 0 ? (
+                <span className="badge bg-danger fs-6">🚫 Out of Stock</span>
+              ) : product.stock <= (product.minimumStockThreshold || 5) ? (
+                <span className="badge bg-warning text-dark fs-6">
+                  ⚠️ Only {product.stock} left - Order soon!
+                </span>
+              ) : (
+                <span className="badge bg-success fs-6">✅ In Stock</span>
+              )}
+            </div>
+          )}
+
           <p className="text-muted">{product.description}</p>
 
           <div className="mb-3">
@@ -168,15 +204,25 @@ function ProductDetail() {
               <button
                 className="btn btn-outline-primary btn-lg w-50"
                 onClick={addToCart}
+                disabled={product.stock != null && product.stock === 0}
+                style={{
+                  opacity: (product.stock != null && product.stock === 0) ? 0.5 : 1,
+                  cursor: (product.stock != null && product.stock === 0) ? "not-allowed" : "pointer",
+                }}
               >
-                ➕ Add to Cart
+                {(product.stock != null && product.stock === 0) ? "Out of Stock" : "➕ Add to Cart"}
               </button>
 
               <button
                 className="btn btn-primary btn-lg w-50"
                 onClick={buyNow}
+                disabled={product.stock != null && product.stock === 0}
+                style={{
+                  opacity: (product.stock != null && product.stock === 0) ? 0.5 : 1,
+                  cursor: (product.stock != null && product.stock === 0) ? "not-allowed" : "pointer",
+                }}
               >
-                🛒 Buy Now
+                {(product.stock != null && product.stock === 0) ? "Out of Stock" : "🛒 Buy Now"}
               </button>
             </div>
           )}
