@@ -1,31 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function AdminOrders() {
   const [orders, setOrders] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-
-  /* ===============================
-     STATUS TRANSITION VALIDATION
-     =============================== */
-  const validTransitions = {
-    "PLACED": ["CONFIRMED", "CANCELLED"],
-    "CONFIRMED": ["SHIPPED", "CANCELLED"],
-    "SHIPPED": ["OUT_FOR_DELIVERY", "CANCELLED"],
-    "OUT_FOR_DELIVERY": ["DELIVERED", "CANCELLED"],
-    "DELIVERED": ["RETURNED"],
-    "CANCELLED": [],
-    "RETURNED": [],
-  };
-
-  const canUpdateStatus = (currentStatus, newStatus) => {
-    if (!currentStatus) return true;
-    const allowed = validTransitions[currentStatus] || [];
-    return allowed.includes(newStatus);
-  };
-
-  const getAllowedNextStates = (currentStatus) => {
-    return validTransitions[currentStatus] || [];
-  };
 
   /* ===============================
      FETCH ALL ORDERS
@@ -44,292 +24,255 @@ function AdminOrders() {
     fetchOrders();
   }, []);
 
-  /* ===============================
-     DELETE ORDER
-     =============================== */
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this order?")) return;
+  // Filter orders based on search query (case-insensitive)
+  const filteredOrders = orders.filter((order) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      order._id.toLowerCase().includes(query) ||
+      order.customer?.name?.toLowerCase().includes(query) ||
+      order.customer?.phone?.toLowerCase().includes(query) ||
+      order.orderStatus?.toLowerCase().includes(query) ||
+      order.paymentStatus?.toLowerCase().includes(query) ||
+      order.paymentMethod?.toLowerCase().includes(query) ||
+      order.totalAmount?.toString().includes(query)
+    );
+  });
 
-    try {
-      await fetch(`${API_URL}/api/orders/${id}`, {
-        method: "DELETE",
+  // Helper function to get date label (Today, Yesterday, or date)
+  const getDateLabel = (dateString) => {
+    const orderDate = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Reset time to compare only dates
+    orderDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    yesterday.setHours(0, 0, 0, 0);
+
+    if (orderDate.getTime() === today.getTime()) {
+      return "Today";
+    } else if (orderDate.getTime() === yesterday.getTime()) {
+      return "Yesterday";
+    } else {
+      return orderDate.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
       });
-      alert("Order deleted");
-      fetchOrders();
-    } catch (err) {
-      console.error("Delete error:", err);
-      alert("Failed to delete order");
     }
   };
 
-  /* ===============================
-     UPDATE PAYMENT STATUS
-     =============================== */
-  const updatePaymentStatus = async (id, status) => {
-    try {
-      const res = await fetch(`${API_URL}/api/orders/payment/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentStatus: status }),
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        alert(`Failed: ${error.error || error.message}`);
-        return;
-      }
-
-      alert("✅ Payment status updated");
-      fetchOrders();
-    } catch (err) {
-      console.error("Payment update error:", err);
-      alert("Error updating payment");
+  // Group orders by date
+  const groupedOrders = filteredOrders.reduce((groups, order) => {
+    const dateLabel = getDateLabel(order.createdAt);
+    if (!groups[dateLabel]) {
+      groups[dateLabel] = [];
     }
-  };
+    groups[dateLabel].push(order);
+    return groups;
+  }, {});
 
-  /* ===============================
-     UPDATE ORDER STATUS (VALIDATED)
-     =============================== */
-  const updateOrderStatus = async (id, status, currentStatus) => {
-    if (!canUpdateStatus(currentStatus, status)) {
-      const allowed = getAllowedNextStates(currentStatus);
-      alert(`❌ Cannot change from ${currentStatus} to ${status}.\nAllowed: ${allowed.join(", ") || "None"}`);
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_URL}/api/orders/status/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, note: `${status} via admin UI` }),
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        alert(`Invalid: ${error.error}`);
-        return;
-      }
-
-      alert("✅ Order status updated");
-      fetchOrders();
-    } catch (err) {
-      console.error("Status update error:", err);
-      alert("Error updating order status");
-    }
-  };
-
-  /* ===============================
-     DOWNLOAD INVOICE
-     =============================== */
-  const downloadInvoice = (orderId) => {
-    window.open(`${API_URL}/api/orders/invoice/${orderId}`, "_blank");
-  };
+  // Sort date groups (Today first, Yesterday second, then older dates)
+  const sortedDateGroups = Object.keys(groupedOrders).sort((a, b) => {
+    if (a === "Today") return -1;
+    if (b === "Today") return 1;
+    if (a === "Yesterday") return -1;
+    if (b === "Yesterday") return 1;
+    // For other dates, sort by most recent first
+    const dateA = new Date(groupedOrders[a][0].createdAt);
+    const dateB = new Date(groupedOrders[b][0].createdAt);
+    return dateB - dateA;
+  });
 
   return (
-    <div className="container-fluid py-5" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
-      <div className="container">
-        <div className="row mb-4">
-          <div className="col-12">
-            <h1 className="display-5 fw-bold">
-              <span style={{ fontSize: "2.5rem" }}>📦</span> Order Management
-            </h1>
-            <p className="text-muted fs-6">Manage orders and update payment/shipping status</p>
+    <>
+      <style>
+        {`
+          .order-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid #e9ecef !important;
+          }
+          .order-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+          }
+          .date-section {
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+          }
+        `}
+      </style>
+
+      <div className="container-fluid py-5" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
+        <div className="container">
+          <div className="row mb-4">
+            <div className="col-12">
+              <h1 className="display-5 fw-bold">
+                <span style={{ fontSize: "2.5rem" }}>📦</span> Order Management
+              </h1>
+              <p className="text-muted fs-6">Click on any order card to view full details</p>
+            </div>
           </div>
-        </div>
 
-        {orders.length === 0 ? (
-          <div className="alert alert-info text-center py-5">
-            <h5>No orders found.</h5>
-          </div>
-        ) : (
-          <div className="row g-4">
-            {orders.map((order) => (
-              <div key={order._id} className="col-12">
-                <div className="card shadow-sm border-0" style={{ borderTop: "4px solid #2563eb" }}>
-                  {/* CARD HEADER */}
-                  <div className="card-header bg-light border-0 py-3">
-                    <div className="row align-items-center g-3">
-                      <div className="col-md-6">
-                        <h6 className="mb-0 text-muted">
-                          <small>ORDER ID:</small>
-                        </h6>
-                        <h5 className="mb-0 fw-bold text-dark">{order._id}</h5>
-                      </div>
-                      <div className="col-md-6 text-md-end">
-                        <span className={`badge ${
-                          order.orderStatus === "DELIVERED" ? "bg-success" :
-                          order.orderStatus === "CANCELLED" ? "bg-danger" :
-                          order.orderStatus === "SHIPPED" || order.orderStatus === "OUT_FOR_DELIVERY" ? "bg-info" :
-                          "bg-warning"
-                        } fs-6`}>
-                          {order.orderStatus || "PLACED"}
-                        </span>
-                      </div>
-                    </div>
+          {/* Search Bar */}
+          <div className="card shadow-sm mb-4">
+            <div className="card-body">
+              <div className="row align-items-center">
+                <div className="col-md-8">
+                  <div className="input-group">
+                    <span className="input-group-text bg-primary text-white">
+                      🔍
+                    </span>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Search by Order ID, Customer, Status, Payment, or Amount..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      autoComplete="off"
+                    />
+                    {searchQuery && (
+                      <button
+                        className="btn btn-outline-secondary"
+                        type="button"
+                        onClick={() => setSearchQuery("")}
+                      >
+                        ✕ Clear
+                      </button>
+                    )}
                   </div>
-
-                  {/* CARD BODY */}
-                  <div className="card-body">
-                    {/* CUSTOMER SECTION */}
-                    <div className="row mb-4 pb-3 border-bottom">
-                      <div className="col-md-6">
-                        <h6 className="text-muted fw-bold mb-3">👤 CUSTOMER DETAILS</h6>
-                        <div className="lh-lg">
-                          <div><strong>Name:</strong> <span className="text-dark">{order.customer?.name}</span></div>
-                          <div><strong>Phone:</strong> <span className="text-dark">{order.customer?.phone}</span></div>
-                          <div><strong>Address:</strong> <span className="text-dark">{order.customer?.address}</span></div>
-                          <div><strong>Pincode:</strong> <span className="text-dark">{order.customer?.pincode}</span></div>
-                        </div>
-                      </div>
-
-                      {/* ORDER DATES */}
-                      <div className="col-md-6">
-                        <h6 className="text-muted fw-bold mb-3">📅 ORDER INFO</h6>
-                        <div className="lh-lg">
-                          <div><strong>Date:</strong> <span className="text-dark">{new Date(order.createdAt).toLocaleDateString()}</span></div>
-                          <div><strong>Method:</strong> <span className="badge bg-secondary">{order.paymentMethod || "COD"}</span></div>
-                          <div><strong>Payment:</strong> <span className={`badge ${order.paymentStatus === "PAID" ? "bg-success" : order.paymentStatus === "FAILED" ? "bg-danger" : "bg-warning"}`}>
-                            {order.paymentStatus || "PENDING"}
-                          </span></div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* ITEMS SECTION */}
-                    <div className="mb-4">
-                      <h6 className="text-muted fw-bold mb-3">🛍️ ORDER ITEMS</h6>
-                      <div className="table-responsive">
-                        <table className="table table-sm table-hover mb-0">
-                          <thead className="table-light">
-                            <tr>
-                              <th className="text-center" style={{ width: "80px" }}>Image</th>
-                              <th className="text-start">Product</th>
-                              <th className="text-center">Qty</th>
-                              <th className="text-end">Price</th>
-                              <th className="text-end">Subtotal</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {order.items.map((item, index) => (
-                              <tr key={index} className="align-middle">
-                                <td className="text-center">
-                                  <img
-                                    src={item.image || (item.productId && item.productId.image) || "https://via.placeholder.com/60?text=No+Image"}
-                                    alt={item.name}
-                                    style={{
-                                      width: "60px",
-                                      height: "60px",
-                                      objectFit: "cover",
-                                      borderRadius: "6px",
-                                      border: "1px solid #e5e7eb"
-                                    }}
-                                  />
-                                </td>
-                                <td className="text-start fw-500">{item.name}</td>
-                                <td className="text-center"><span className="badge bg-light text-dark">{item.qty}</span></td>
-                                <td className="text-end">₹{Number(item.price).toFixed(2)}</td>
-                                <td className="text-end fw-bold">₹{(item.price * item.qty).toFixed(2)}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      <div className="row mt-3 pt-3 border-top">
-                        <div className="col-md-8 text-end">
-                          <h6 className="text-muted">TOTAL AMOUNT:</h6>
-                        </div>
-                        <div className="col-md-4 text-end">
-                          <h5 className="fw-bold text-success">₹{Number(order.totalAmount).toFixed(2)}</h5>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* PAYMENT ACTIONS */}
-                    <div className="mb-4 p-3 bg-light rounded">
-                      <h6 className="text-muted fw-bold mb-3">💳 PAYMENT ACTIONS</h6>
-                      <div className="d-flex gap-2 flex-wrap">
-                        <button
-                          onClick={() => updatePaymentStatus(order._id, "PAID")}
-                          className="btn btn-sm btn-success"
-                          disabled={order.paymentStatus === "PAID"}
-                        >
-                          ✓ Mark Paid
-                        </button>
-                        <button
-                          onClick={() => updatePaymentStatus(order._id, "FAILED")}
-                          className="btn btn-sm btn-danger"
-                          disabled={order.paymentStatus === "FAILED"}
-                        >
-                          ✗ Mark Failed
-                        </button>
-                        <button
-                          onClick={() => downloadInvoice(order._id)}
-                          className="btn btn-sm btn-info"
-                        >
-                          📄 Invoice
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* ORDER STATUS ACTIONS */}
-                    <div className="p-3 bg-light rounded">
-                      <h6 className="text-muted fw-bold mb-3">
-                        🚚 ORDER STATUS <span className="badge bg-primary">{order.orderStatus || "PLACED"}</span>
-                      </h6>
-                      <div className="d-flex gap-2 flex-wrap">
-                        {["CONFIRMED", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"].map(
-                          (status) => {
-                            const isAllowed = canUpdateStatus(order.orderStatus || "PLACED", status);
-                            return (
-                              <button
-                                key={status}
-                                disabled={!isAllowed}
-                                onClick={() =>
-                                  updateOrderStatus(
-                                    order._id,
-                                    status,
-                                    order.orderStatus || "PLACED"
-                                  )
-                                }
-                                className={`btn btn-sm ${isAllowed ? "btn-outline-primary" : "btn-outline-secondary disabled"}`}
-                                title={isAllowed ? `Move to ${status}` : `Cannot transition from ${order.orderStatus} to ${status}`}
-                              >
-                                {status.replaceAll("_", " ")}
-                              </button>
-                            );
-                          }
-                        )}
-
-                        <button
-                          disabled={!["PLACED", "CONFIRMED", "SHIPPED", "OUT_FOR_DELIVERY"].includes(order.orderStatus || "PLACED")}
-                          onClick={() =>
-                            updateOrderStatus(order._id, "CANCELLED", order.orderStatus || "PLACED")
-                          }
-                          className={`btn btn-sm ${!["DELIVERED", "CANCELLED", "RETURNED"].includes(order.orderStatus || "PLACED") ? "btn-outline-danger" : "btn-outline-secondary disabled"}`}
-                          title={!["DELIVERED", "CANCELLED", "RETURNED"].includes(order.orderStatus || "PLACED") ? "Cancel this order" : "Cannot cancel delivered/cancelled orders"}
-                        >
-                          Cancel Order
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* CARD FOOTER */}
-                  <div className="card-footer bg-light border-top py-3 text-end">
-                    <button
-                      onClick={() => handleDelete(order._id)}
-                      className="btn btn-sm btn-outline-danger"
-                    >
-                      🗑️ Delete Order
-                    </button>
+                </div>
+                <div className="col-md-4 mt-2 mt-md-0">
+                  <div className="text-muted">
+                    Showing {filteredOrders.length} of {orders.length} orders
                   </div>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
-        )}
+
+          {filteredOrders.length === 0 ? (
+            <div className="alert alert-info text-center py-5">
+              <h5>
+                {searchQuery
+                  ? `No orders found matching "${searchQuery}"`
+                  : "No orders found."}
+              </h5>
+            </div>
+          ) : (
+            <>
+              {sortedDateGroups.map((dateLabel) => (
+                <div key={dateLabel} className="mb-5">
+                  {/* Date Header */}
+                  <div className="d-flex align-items-center mb-3 date-section">
+                    <h3 className="fw-bold mb-0">
+                      <span className="text-primary">
+                        {dateLabel === "Today" ? "📅 " : dateLabel === "Yesterday" ? "📆 " : "🗓️ "}
+                      </span>
+                      {dateLabel}
+                    </h3>
+                    <span className="badge bg-primary ms-3">
+                      {groupedOrders[dateLabel].length} order{groupedOrders[dateLabel].length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+
+                  {/* Orders for this date */}
+                  <div className="row g-4">
+                    {groupedOrders[dateLabel].map((order) => (
+                      <div key={order._id} className="col-12 col-md-6 col-lg-4">
+                        <div 
+                          className="card h-100 order-card shadow-sm border-0" 
+                          onClick={() => navigate(`/adminorder/${order._id}`)}
+                          style={{ borderTop: "4px solid #2563eb" }}
+                        >
+                          {/* CARD HEADER */}
+                          <div className="card-header bg-light border-0 py-3">
+                            <div className="d-flex justify-content-between align-items-center">
+                              <div>
+                                <small className="text-muted">ORDER ID</small>
+                                <div className="fw-bold text-truncate" style={{ maxWidth: "200px" }}>
+                                  {order._id}
+                                </div>
+                              </div>
+                              <span className={`badge ${
+                                order.orderStatus === "DELIVERED" ? "bg-success" :
+                                order.orderStatus === "CANCELLED" ? "bg-danger" :
+                                order.orderStatus === "SHIPPED" || order.orderStatus === "OUT_FOR_DELIVERY" ? "bg-info" :
+                                "bg-warning"
+                              }`}>
+                                {order.orderStatus || "PLACED"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* CARD BODY */}
+                          <div className="card-body">
+                            {/* CUSTOMER INFO */}
+                            <div className="mb-3">
+                              <h6 className="text-muted mb-2">👤 Customer</h6>
+                              <div className="fw-bold">{order.customer?.name}</div>
+                              <div className="text-muted small">{order.customer?.phone}</div>
+                            </div>
+
+                            {/* ORDER INFO */}
+                            <div className="mb-3">
+                              <h6 className="text-muted mb-2">📅 Order Date</h6>
+                              <div>{new Date(order.createdAt).toLocaleDateString()}</div>
+                            </div>
+
+                            {/* ITEMS COUNT */}
+                            <div className="mb-3">
+                              <h6 className="text-muted mb-2">🛍️ Items</h6>
+                              <div>{order.items?.length || 0} item(s)</div>
+                            </div>
+
+                            {/* PAYMENT */}
+                            <div className="mb-3">
+                              <h6 className="text-muted mb-2">💳 Payment</h6>
+                              <div>
+                                <span className="badge bg-secondary me-2">
+                                  {order.paymentMethod || "COD"}
+                                </span>
+                                <span className={`badge ${
+                                  order.paymentStatus === "PAID" ? "bg-success" : 
+                                  order.paymentStatus === "FAILED" ? "bg-danger" : 
+                                  "bg-warning"
+                                }`}>
+                                  {order.paymentStatus || "PENDING"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* TOTAL */}
+                            <div className="border-top pt-3 mt-3">
+                              <div className="d-flex justify-content-between align-items-center">
+                                <h6 className="text-muted mb-0">Total Amount</h6>
+                                <h5 className="fw-bold text-success mb-0">
+                                  ₹{Number(order.totalAmount).toFixed(2)}
+                                </h5>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* CARD FOOTER */}
+                          <div className="card-footer bg-light border-top py-2 text-center">
+                            <small className="text-muted">Click to view full details →</small>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

@@ -23,6 +23,7 @@ const Toast = ({ message, type, show, onClose }) => {
 
 function Admin() {
   const [products, setProducts] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -175,6 +176,16 @@ function Admin() {
     // ✅ If relative path, prepend API_URL (for old local images)
     return `${API_URL}/${img.replace(/^\/+/, "")}`;
   };
+
+  // Filter products based on search query
+  const filteredProducts = products.filter((product) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      product.name.toLowerCase().includes(query) ||
+      product.description.toLowerCase().includes(query) ||
+      product.price.toString().includes(query)
+    );
+  });
 
   return (
     <div className="container py-4">
@@ -347,6 +358,44 @@ function Admin() {
       </div>
 
       <h2 className="mb-3">All Products</h2>
+      
+      {/* Search Bar */}
+      <div className="card shadow-sm mb-3">
+        <div className="card-body">
+          <div className="row align-items-center">
+            <div className="col-md-8">
+              <div className="input-group">
+                <span className="input-group-text bg-primary text-white">
+                  🔍
+                </span>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search products by name, description, or price..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoComplete="off"
+                />
+                {searchQuery && (
+                  <button
+                    className="btn btn-outline-secondary"
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                  >
+                    ✕ Clear
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="col-md-4 mt-2 mt-md-0">
+              <div className="text-muted">
+                Showing {filteredProducts.length} of {products.length} products
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="table-responsive">
         <table className="table table-bordered table-hover align-middle">
           <thead className="table-light">
@@ -360,7 +409,18 @@ function Admin() {
             </tr>
           </thead>
           <tbody>
-            {products.map((p) => (
+            {filteredProducts.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="text-center py-4">
+                  <div className="text-muted">
+                    {searchQuery
+                      ? `No products found matching "${searchQuery}"`
+                      : "No products available"}
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              filteredProducts.map((p) => (
               <tr key={p._id} className="text-center">
                 <td>{p.name}</td>
                 <td>{p.description}</td>
@@ -414,7 +474,8 @@ function Admin() {
                   </button>
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>

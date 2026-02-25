@@ -25,6 +25,7 @@ import ProductDetail from "./pages/ProductDetail";
 // Admin pages
 import Admin from "./pages/admin";
 import AdminOrders from "./pages/adminorder";
+import OrderDetail from "./pages/OrderDetail";
 import UserReports from "./pages/UserReports";
 
 // ✅ NEW PAGE
@@ -237,6 +238,32 @@ function App() {
                 userRole={userRole}
               >
                 <AdminOrders />
+              </AdminRoute>
+            }
+          />
+
+          {/* Admin Order List (alternative path) */}
+          <Route
+            path="/adminorder"
+            element={
+              <AdminRoute
+                isLoggedIn={isLoggedIn}
+                userRole={userRole}
+              >
+                <AdminOrders />
+              </AdminRoute>
+            }
+          />
+
+          {/* Admin Order Detail */}
+          <Route
+            path="/adminorder/:id"
+            element={
+              <AdminRoute
+                isLoggedIn={isLoggedIn}
+                userRole={userRole}
+              >
+                <OrderDetail />
               </AdminRoute>
             }
           />
