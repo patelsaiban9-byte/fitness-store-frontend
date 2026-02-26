@@ -89,7 +89,7 @@ function ProductDetail() {
   };
 
   /* ===============================
-     BUY NOW - ADD TO EXISTING CART
+     BUY NOW - DIRECT ORDER (SEPARATE FROM CART)
      =============================== */
   const buyNow = () => {
     // Check stock availability (only if stock is being tracked)
@@ -98,39 +98,19 @@ function ProductDetail() {
       return;
     }
 
-    // Load existing cart (don't replace it!)
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    // Store only this product for direct purchase (NOT in cart)
+    const directBuyItem = {
+      _id: product._id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      qty: 1,
+    };
 
-    const existingItem = cart.find(
-      (item) => item._id === product._id
-    );
-
-    // Check if adding to cart would exceed available stock (only if stock is tracked)
-    if (product.stock != null && product.stock > 0) {
-      const currentQtyInCart = existingItem ? existingItem.qty : 0;
-      if (currentQtyInCart >= product.stock) {
-        alert(`Sorry, only ${product.stock} units available. You already have ${currentQtyInCart} in your cart.`);
-        return;
-      }
-    }
-
-    // Add to cart (only if not already present - don't change existing quantities)
-    if (!existingItem) {
-      // Only add if item is NOT in cart
-      cart.push({
-        _id: product._id,
-        name: product.name,
-        price: product.price,
-        image: product.image,
-        qty: 1,
-      });
-    }
-    // If item already exists, keep its quantity unchanged and just go to checkout
-
-    localStorage.setItem("cart", JSON.stringify(cart));
-    // Dispatch custom event to notify navbar (same-tab updates)
-    window.dispatchEvent(new Event("cartUpdated"));
-    navigate("/order/cart");
+    // Save to sessionStorage (temporary, clears when tab closes)
+    sessionStorage.setItem("directBuyItem", JSON.stringify(directBuyItem));
+    
+    navigate("/buynow");
   };
 
   /* ===============================

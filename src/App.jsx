@@ -196,7 +196,27 @@ function App() {
             }
           />
 
-          {/* Order Form */}
+          {/* Checkout */}
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute isLoggedIn={isLoggedIn}>
+                <OrderForm />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Buy Now - Direct Order */}
+          <Route
+            path="/buynow"
+            element={
+              <ProtectedRoute isLoggedIn={isLoggedIn}>
+                <OrderForm />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Order Form (Legacy Route) */}
           <Route
             path="/order/:id"
             element={

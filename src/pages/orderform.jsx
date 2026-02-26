@@ -18,16 +18,26 @@ function OrderForm() {
   });
 
   /* ===============================
-     LOAD CART
+     LOAD CART OR DIRECT BUY ITEM
      =============================== */
   useEffect(() => {
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
-    if (cart.length === 0) {
-      alert("Cart is empty");
-      navigate("/products");
-      return;
+    // Check if this is a direct buy order
+    const directBuyItem = sessionStorage.getItem("directBuyItem");
+    
+    if (directBuyItem) {
+      // Direct buy - use only the single item
+      const item = JSON.parse(directBuyItem);
+      setCartItems([item]);
+    } else {
+      // Cart checkout - use all cart items
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      if (cart.length === 0) {
+        alert("Cart is empty");
+        navigate("/products");
+        return;
+      }
+      setCartItems(cart);
     }
-    setCartItems(cart);
   }, [navigate]);
 
   /* ===============================
@@ -109,10 +119,20 @@ function OrderForm() {
       }
 
       alert("✅ Order placed successfully");
-      // 🛒 Clear cart after successful order placement
-      localStorage.removeItem("cart");
-      // Dispatch custom event to notify navbar (cart cleared)
-      window.dispatchEvent(new Event("cartUpdated"));
+      
+      // Check if this was a direct buy or cart order
+      const directBuyItem = sessionStorage.getItem("directBuyItem");
+      
+      if (directBuyItem) {
+        // Direct buy - only clear sessionStorage
+        sessionStorage.removeItem("directBuyItem");
+      } else {
+        // Cart order - clear cart from localStorage
+        localStorage.removeItem("cart");
+        // Dispatch custom event to notify navbar (cart cleared)
+        window.dispatchEvent(new Event("cartUpdated"));
+      }
+      
       navigate("/products");
     } catch (err) {
       console.error("Order error:", err);

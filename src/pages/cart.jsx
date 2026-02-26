@@ -134,7 +134,7 @@ function Cart() {
 
   // ✅ NEW: Checkout → OrderForm (cart mode)
   const handleCheckout = () => {
-    navigate("/order/cart");
+    navigate("/checkout");
   };
 
   // If cart empty
