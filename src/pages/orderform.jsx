@@ -109,7 +109,10 @@ function OrderForm() {
       }
 
       alert("✅ Order placed successfully");
+      // 🛒 Clear cart after successful order placement
       localStorage.removeItem("cart");
+      // Dispatch custom event to notify navbar (cart cleared)
+      window.dispatchEvent(new Event("cartUpdated"));
       navigate("/products");
     } catch (err) {
       console.error("Order error:", err);

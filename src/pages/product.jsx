@@ -192,7 +192,8 @@ function Product() {
                         }
 
                         localStorage.setItem("cart", JSON.stringify(cart));
-                        window.dispatchEvent(new Event("storage"));
+                        // Dispatch custom event to notify navbar (same-tab updates)
+                        window.dispatchEvent(new Event("cartUpdated"));
                         alert(`${product.name} added to cart!`);
                       }}
                       style={{

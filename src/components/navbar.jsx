@@ -26,9 +26,13 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
 
     // Listen for cart changes (other tabs / updates)
     window.addEventListener("storage", updateCartCount);
+    
+    // Listen for custom cart update event (same tab updates)
+    window.addEventListener("cartUpdated", updateCartCount);
 
     return () => {
       window.removeEventListener("storage", updateCartCount);
+      window.removeEventListener("cartUpdated", updateCartCount);
     };
   }, []);
 
@@ -39,7 +43,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
     localStorage.removeItem("phone");
     localStorage.removeItem("userId");
     localStorage.removeItem("name");
-    localStorage.removeItem("cart");
+    // 🛒 Keep cart data - only clear on order placement
     setIsLoggedIn(false);
     setUserRole(null);
     navigate("/login");

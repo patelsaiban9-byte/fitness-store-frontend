@@ -80,8 +80,7 @@ function Login({ setIsLoggedIn, setUserRole }) {
       localStorage.setItem("phone", data.user.phone);
       localStorage.setItem("name", data.user.name);
 
-      // 🛒 Clear cart on login (each user has their own cart)
-      localStorage.removeItem("cart");
+      // 🛒 Keep cart on login (user retains their cart after logging in)
 
       setIsLoggedIn(true);
       setUserRole(data.user.role);

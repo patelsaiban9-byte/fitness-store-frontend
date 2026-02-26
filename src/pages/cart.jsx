@@ -79,6 +79,8 @@ function Cart() {
       "cart",
       JSON.stringify(updatedCart)
     );
+    // Dispatch custom event to notify navbar (same-tab updates)
+    window.dispatchEvent(new Event("cartUpdated"));
   };
 
   // Increase quantity
