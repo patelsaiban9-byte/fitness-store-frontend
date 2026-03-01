@@ -5,6 +5,11 @@ function MyOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(null);
+  const [returns, setReturns] = useState([]);
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [returnReason, setReturnReason] = useState("");
+  const [submittingReturn, setSubmittingReturn] = useState(false);
   const navigate = useNavigate();
 
   const API_URL =
@@ -70,8 +75,73 @@ function MyOrders() {
       }
     };
 
+    const fetchMyReturns = async () => {
+      try {
+        const res = await fetch(
+          `${API_URL}/api/returns/user/${userId}`
+        );
+        const data = await res.json();
+        setReturns(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("❌ Fetch returns error:", err);
+        setReturns([]);
+      }
+    };
+
     fetchMyOrders();
+    fetchMyReturns();
   }, [userId, API_URL, navigate]);
+
+  // Handle return request submission
+  const handleReturnRequest = async () => {
+    if (!returnReason.trim()) {
+      alert("Please provide a reason for return");
+      return;
+    }
+
+    try {
+      setSubmittingReturn(true);
+      const res = await fetch(`${API_URL}/api/returns`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: selectedOrder._id,
+          userId: userId,
+          items: selectedOrder.items,
+          reason: returnReason,
+          refundAmount: selectedOrder.totalAmount,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("Return request submitted successfully!");
+        setShowReturnModal(false);
+        setReturnReason("");
+        setSelectedOrder(null);
+        
+        // Refresh returns
+        const returnsRes = await fetch(
+          `${API_URL}/api/returns/user/${userId}`
+        );
+        const returnsData = await returnsRes.json();
+        setReturns(Array.isArray(returnsData) ? returnsData : []);
+      } else {
+        alert(data.error || "Failed to submit return request");
+      }
+    } catch (err) {
+      console.error("❌ Return request error:", err);
+      alert("Failed to submit return request");
+    } finally {
+      setSubmittingReturn(false);
+    }
+  };
+
+  // Check if order has a return request
+  const getReturnStatus = (orderId) => {
+    return returns.find(r => r.orderId?._id === orderId);
+  };
 
   /* ===============================
      LOADING UI
@@ -282,7 +352,7 @@ function MyOrders() {
                       </div>
                     )}
 
-                    {/* INVOICE DOWNLOAD */}
+                    {/* INVOICE DOWNLOAD & RETURN REQUEST */}
                     <div className="d-flex gap-2">
                       <button
                         className="btn btn-primary"
@@ -316,6 +386,40 @@ function MyOrders() {
                           ? "📥 Downloading..."
                           : "📄 Download Invoice"}
                       </button>
+
+                      {/* RETURN REQUEST BUTTON */}
+                      {order.orderStatus === "DELIVERED" && (() => {
+                        const returnRequest = getReturnStatus(order._id);
+                        if (returnRequest) {
+                          return (
+                            <button
+                              className={`btn ${
+                                returnRequest.status === "APPROVED"
+                                  ? "btn-success"
+                                  : returnRequest.status === "REJECTED"
+                                  ? "btn-danger"
+                                  : "btn-warning"
+                              }`}
+                              disabled
+                            >
+                              {returnRequest.status === "PENDING" && "⏳ Return Pending"}
+                              {returnRequest.status === "APPROVED" && "✅ Return Approved"}
+                              {returnRequest.status === "REJECTED" && "❌ Return Rejected"}
+                            </button>
+                          );
+                        }
+                        return (
+                          <button
+                            className="btn btn-outline-danger"
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setShowReturnModal(true);
+                            }}
+                          >
+                            🔄 Request Return
+                          </button>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -324,6 +428,93 @@ function MyOrders() {
           ))}
         </div>
       </div>
+
+      {/* RETURN REQUEST MODAL */}
+      {showReturnModal && (
+        <div
+          className="modal show d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          onClick={() => {
+            if (!submittingReturn) {
+              setShowReturnModal(false);
+              setReturnReason("");
+              setSelectedOrder(null);
+            }
+          }}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Request Return</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => {
+                    if (!submittingReturn) {
+                      setShowReturnModal(false);
+                      setReturnReason("");
+                      setSelectedOrder(null);
+                    }
+                  }}
+                  disabled={submittingReturn}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>
+                  <strong>Order ID:</strong> {selectedOrder?._id.slice(-8).toUpperCase()}
+                </p>
+                <p>
+                  <strong>Total Amount:</strong> ₹{selectedOrder?.totalAmount.toFixed(2)}
+                </p>
+                <div className="mb-3">
+                  <label className="form-label">
+                    <strong>Reason for Return <span className="text-danger">*</span></strong>
+                  </label>
+                  <textarea
+                    className="form-control"
+                    rows="4"
+                    value={returnReason}
+                    onChange={(e) => setReturnReason(e.target.value)}
+                    placeholder="Please explain why you want to return this order..."
+                    disabled={submittingReturn}
+                    maxLength={500}
+                  ></textarea>
+                  <small className="text-muted">
+                    {returnReason.length}/500 characters
+                  </small>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    if (!submittingReturn) {
+                      setShowReturnModal(false);
+                      setReturnReason("");
+                      setSelectedOrder(null);
+                    }
+                  }}
+                  disabled={submittingReturn}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={handleReturnRequest}
+                  disabled={submittingReturn || !returnReason.trim()}
+                >
+                  {submittingReturn ? "Submitting..." : "Submit Return Request"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

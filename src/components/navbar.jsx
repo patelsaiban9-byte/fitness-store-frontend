@@ -173,6 +173,16 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                         Reports
                       </Link>
                     </li>
+
+                    <li className="nav-item">
+                      <Link
+                        className="nav-link text-warning fw-bolder mx-1"
+                        to="/admin/returns"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Returns
+                      </Link>
+                    </li>
                   </>
                 )}
 

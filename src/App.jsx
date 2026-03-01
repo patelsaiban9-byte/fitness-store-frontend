@@ -27,6 +27,7 @@ import Admin from "./pages/admin";
 import AdminOrders from "./pages/adminorder";
 import OrderDetail from "./pages/OrderDetail";
 import UserReports from "./pages/UserReports";
+import AdminReturns from "./pages/AdminReturns";
 
 // ✅ NEW PAGE
 import MyOrders from "./pages/MyOrders";
@@ -297,6 +298,19 @@ function App() {
                 userRole={userRole}
               >
                 <UserReports />
+              </AdminRoute>
+            }
+          />
+
+          {/* Admin Returns */}
+          <Route
+            path="/admin/returns"
+            element={
+              <AdminRoute
+                isLoggedIn={isLoggedIn}
+                userRole={userRole}
+              >
+                <AdminReturns />
               </AdminRoute>
             }
           />
