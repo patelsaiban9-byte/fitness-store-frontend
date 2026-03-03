@@ -12,7 +12,7 @@ const levelClassName = {
   low: "bg-danger",
 };
 
-export default function AdminReports() {
+export default function SalesReports() {
   const [period, setPeriod] = useState("monthly");
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);

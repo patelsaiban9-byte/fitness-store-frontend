@@ -170,7 +170,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                         to="/admin/reports"
                         onClick={() => setIsOpen(false)}
                       >
-                        Reports
+                        Sales Reports
                       </Link>
                     </li>
 

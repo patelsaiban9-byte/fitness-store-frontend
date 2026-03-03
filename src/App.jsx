@@ -14,6 +14,7 @@ import Navbar from "./components/navbar";
 // Pages
 import Login from "./pages/login";
 import Register from "./pages/register";
+import ForgotPassword from "./pages/forgotPassword";
 import Home from "./pages/home";
 import Products from "./pages/product";
 import Cart from "./pages/cart";
@@ -26,7 +27,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Admin from "./pages/admin";
 import AdminOrders from "./pages/adminorder";
 import OrderDetail from "./pages/OrderDetail";
-import UserReports from "./pages/UserReports";
+import SalesReports from "./pages/SalesReports";
 import AdminReturns from "./pages/AdminReturns";
 
 // ✅ NEW PAGE
@@ -57,7 +58,7 @@ function Layout({
   setUserRole,
 }) {
   const location = useLocation();
-  const hideNavbar = ["/login", "/register"].includes(location.pathname);
+  const hideNavbar = ["/login", "/register", "/forgot-password"].includes(location.pathname);
 
   return (
     <>
@@ -156,6 +157,7 @@ function App() {
             }
           />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Home */}
           <Route
@@ -297,7 +299,7 @@ function App() {
                 isLoggedIn={isLoggedIn}
                 userRole={userRole}
               >
-                <UserReports />
+                <SalesReports />
               </AdminRoute>
             }
           />

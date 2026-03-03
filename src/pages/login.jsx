@@ -172,6 +172,12 @@ function Login({ setIsLoggedIn, setUserRole }) {
                   </div>
                 </div>
 
+                <div className="text-end mb-3">
+                  <Link to="/forgot-password" className="link-primary">
+                    Forgot Password?
+                  </Link>
+                </div>
+
                 <button type="submit" className="auth-button">
                   Sign In
                 </button>
