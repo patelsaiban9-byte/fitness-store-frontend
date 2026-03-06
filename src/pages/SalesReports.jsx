@@ -1,4 +1,19 @@
 import React, { useEffect, useState } from "react";
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 const PERIOD_OPTIONS = [
   { value: "monthly", label: "Monthly" },
@@ -6,10 +21,10 @@ const PERIOD_OPTIONS = [
   { value: "yearly", label: "Yearly" },
 ];
 
-const levelClassName = {
-  high: "bg-success",
-  medium: "bg-warning",
-  low: "bg-danger",
+const CATEGORY_COLORS = {
+  high: "#28a745",
+  medium: "#ffc107",
+  low: "#dc3545",
 };
 
 export default function SalesReports() {
@@ -53,7 +68,35 @@ export default function SalesReports() {
   }, [period]);
 
   const chartData = (report?.chartData || []).slice(0, 10);
-  const maxQty = chartData.length ? Math.max(...chartData.map((item) => item.qty)) : 0;
+
+  const downloadPDF = async () => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/admin/reports-pdf?period=${period}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to download PDF");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `sales-report-${period}-${new Date().getTime()}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("Failed to download PDF: " + err.message);
+    }
+  };
 
   return (
     <div className="container py-4">
@@ -66,18 +109,29 @@ export default function SalesReports() {
             <small className="text-muted">Choose report period: monthly, quarterly, yearly</small>
           </div>
 
-          <select
-            className="form-select"
-            style={{ maxWidth: "220px" }}
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
-          >
-            {PERIOD_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <div className="d-flex gap-2 align-items-center">
+            <select
+              className="form-select"
+              style={{ maxWidth: "220px" }}
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+            >
+              {PERIOD_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+
+            <button
+              className="btn btn-success"
+              onClick={downloadPDF}
+              disabled={!report}
+              title="Download report as PDF"
+            >
+              📥 Download PDF
+            </button>
+          </div>
         </div>
       </div>
 
@@ -133,30 +187,284 @@ export default function SalesReports() {
               {chartData.length === 0 ? (
                 <p className="text-muted mb-0">No sales data found for selected period.</p>
               ) : (
-                <div className="d-flex flex-column gap-3">
-                  {chartData.map((item) => {
-                    const width = maxQty > 0 ? Math.max((item.qty / maxQty) * 100, 4) : 0;
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart
+                    data={chartData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="label"
+                      angle={-45}
+                      textAnchor="end"
+                      height={100}
+                      interval={0}
+                      style={{ fontSize: "12px" }}
+                    />
+                    <YAxis label={{ value: "Quantity Sold", angle: -90, position: "insideLeft" }} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar
+                      dataKey="qty"
+                      name="Quantity Sold"
+                      fill="#8884d8"
+                      radius={[8, 8, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
 
-                    return (
-                      <div key={item.label}>
-                        <div className="d-flex justify-content-between mb-1">
-                          <span>{item.label}</span>
-                          <span className="fw-semibold">{item.qty}</span>
-                        </div>
-                        <div className="progress" style={{ height: "16px" }}>
-                          <div
-                            className={`progress-bar ${levelClassName[item.level] || "bg-secondary"}`}
-                            role="progressbar"
-                            style={{ width: `${width}%` }}
-                            aria-valuenow={item.qty}
-                            aria-valuemin="0"
-                            aria-valuemax={maxQty}
-                          ></div>
-                        </div>
-                      </div>
-                    );
-                  })}
+          <div className="card shadow-sm mb-4">
+            <div className="card-body">
+              <h5 className="mb-3">Product Distribution by Sales Level</h5>
+
+              {!report.groups || (report.groups.highSelling.length === 0 && report.groups.mediumSelling.length === 0 && report.groups.lowSelling.length === 0) ? (
+                <p className="text-muted mb-0">No product data available.</p>
+              ) : (
+                <div className="row">
+                  <div className="col-md-6">
+                    <h6 className="text-center">Product Count by Category</h6>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={[
+                            {
+                              name: "High Selling",
+                              value: report.groups?.highSelling?.length || 0,
+                              color: CATEGORY_COLORS.high,
+                            },
+                            {
+                              name: "Medium Selling",
+                              value: report.groups?.mediumSelling?.length || 0,
+                              color: CATEGORY_COLORS.medium,
+                            },
+                            {
+                              name: "Low Selling",
+                              value: report.groups?.lowSelling?.length || 0,
+                              color: CATEGORY_COLORS.low,
+                            },
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, value, percent }) =>
+                            value > 0 ? `${name}: ${value} (${(percent * 100).toFixed(0)}%)` : ""
+                          }
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {[
+                            {
+                              name: "High Selling",
+                              value: report.groups?.highSelling?.length || 0,
+                              color: CATEGORY_COLORS.high,
+                            },
+                            {
+                              name: "Medium Selling",
+                              value: report.groups?.mediumSelling?.length || 0,
+                              color: CATEGORY_COLORS.medium,
+                            },
+                            {
+                              name: "Low Selling",
+                              value: report.groups?.lowSelling?.length || 0,
+                              color: CATEGORY_COLORS.low,
+                            },
+                          ].map((entry) => (
+                            <Cell key={`cell-${entry.name}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => `${value} products`} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <div className="col-md-6">
+                    <h6 className="text-center">Revenue by Sales Level</h6>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={[
+                            {
+                              name: "High Selling",
+                              value: (report.groups?.highSelling || []).reduce((sum, p) => sum + p.totalRevenue, 0),
+                              color: CATEGORY_COLORS.high,
+                            },
+                            {
+                              name: "Medium Selling",
+                              value: (report.groups?.mediumSelling || []).reduce((sum, p) => sum + p.totalRevenue, 0),
+                              color: CATEGORY_COLORS.medium,
+                            },
+                            {
+                              name: "Low Selling",
+                              value: (report.groups?.lowSelling || []).reduce((sum, p) => sum + p.totalRevenue, 0),
+                              color: CATEGORY_COLORS.low,
+                            },
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, value, percent }) =>
+                            value > 0 ? `${name}: ₹${value?.toFixed(0) || 0} (${(percent * 100).toFixed(0)}%)` : ""
+                          }
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {[
+                            {
+                              name: "High Selling",
+                              value: (report.groups?.highSelling || []).reduce((sum, p) => sum + p.totalRevenue, 0),
+                              color: CATEGORY_COLORS.high,
+                            },
+                            {
+                              name: "Medium Selling",
+                              value: (report.groups?.mediumSelling || []).reduce((sum, p) => sum + p.totalRevenue, 0),
+                              color: CATEGORY_COLORS.medium,
+                            },
+                            {
+                              name: "Low Selling",
+                              value: (report.groups?.lowSelling || []).reduce((sum, p) => sum + p.totalRevenue, 0),
+                              color: CATEGORY_COLORS.low,
+                            },
+                          ].map((entry) => (
+                            <Cell key={`cell-${entry.name}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => `₹${value?.toFixed(2) || 0}`} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
+              )}
+            </div>
+          </div>
+
+          <div className="card shadow-sm mb-4">
+            <div className="card-body">
+              <h5 className="mb-3">Top 10 Customers by Total Spent</h5>
+
+              {(!report.topCustomers || report.topCustomers.length === 0) ? (
+                <p className="text-muted mb-0">No customer data found for selected period.</p>
+              ) : (
+                <>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart
+                      data={report.topCustomers}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="name"
+                        angle={-45}
+                        textAnchor="end"
+                        height={100}
+                        interval={0}
+                        style={{ fontSize: "11px" }}
+                      />
+                      <YAxis 
+                        label={{ value: "Total Spent (₹)", angle: -90, position: "insideLeft" }}
+                        tickFormatter={(value) => `₹${value}`}
+                      />
+                      <Tooltip 
+                        formatter={(value, name) => {
+                          if (name === "Total Spent") return [`₹${value.toFixed(2)}`, name];
+                          return [value, name];
+                        }}
+                        labelFormatter={(label) => {
+                          const customer = report.topCustomers.find(c => c.name === label);
+                          return customer ? `${customer.name} (${customer.orders} orders)` : label;
+                        }}
+                      />
+                      <Legend />
+                      <Bar
+                        dataKey="spent"
+                        name="Total Spent"
+                        fill="#82ca9d"
+                        radius={[8, 8, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  
+                  <div className="mt-3">
+                    <small className="text-muted">
+                      Showing {report.topCustomers.length} customer{report.topCustomers.length !== 1 ? 's' : ''}
+                    </small>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="card shadow-sm mb-4">
+            <div className="card-body">
+              <h5 className="mb-3">Sales Trend by {period.charAt(0).toUpperCase() + period.slice(1)}</h5>
+
+              {(!report.salesTrend || report.salesTrend.length === 0) ? (
+                <p className="text-muted mb-0">No sales data available.</p>
+              ) : (
+                <>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <LineChart
+                      data={report.salesTrend}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="period"
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                        interval={0}
+                        style={{ fontSize: "11px" }}
+                      />
+                      <YAxis 
+                        yAxisId="left"
+                        label={{ value: "Sales Amount (₹)", angle: -90, position: "insideLeft" }}
+                        tickFormatter={(value) => `₹${value}`}
+                      />
+                      <YAxis
+                        yAxisId="right"
+                        orientation="right"
+                        label={{ value: "Orders", angle: 90, position: "insideRight" }}
+                      />
+                      <Tooltip 
+                        formatter={(value, name) => {
+                          if (name === "Sales") return [`₹${value.toFixed(2)}`, name];
+                          return [value, name];
+                        }}
+                      />
+                      <Legend />
+                      <Line
+                        yAxisId="left"
+                        type="monotone"
+                        dataKey="sales"
+                        name="Sales"
+                        stroke="#8884d8"
+                        strokeWidth={3}
+                        dot={{ r: 5 }}
+                        activeDot={{ r: 7 }}
+                      />
+                      <Line
+                        yAxisId="right"
+                        type="monotone"
+                        dataKey="orders"
+                        name="Orders"
+                        stroke="#ffc658"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                  
+                  <div className="mt-3">
+                    <small className="text-muted">
+                      Showing {report.salesTrend.length} {period === "monthly" ? "month" : period === "quarterly" ? "quarter" : "year"}{report.salesTrend.length !== 1 ? 's' : ''} of sales data
+                    </small>
+                  </div>
+                </>
               )}
             </div>
           </div>
