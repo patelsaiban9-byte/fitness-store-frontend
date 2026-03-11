@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   BarChart,
   Bar,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell,
@@ -18,13 +16,27 @@ import {
 const PERIOD_OPTIONS = [
   { value: "monthly", label: "Monthly" },
   { value: "quarterly", label: "Quarterly" },
-  { value: "yearly", label: "Yearly" },
+  { value: "yearly", label: "Annual" },
 ];
+
+const PERIOD_LABELS = {
+  monthly: "Monthly",
+  quarterly: "Quarterly",
+  yearly: "Annual",
+};
 
 const CATEGORY_COLORS = {
   high: "#28a745",
   medium: "#ffc107",
   low: "#dc3545",
+};
+
+const formatCurrency = (value) => `₹${Number(value || 0).toFixed(2)}`;
+
+const getPeriodUnitLabel = (selectedPeriod) => {
+  if (selectedPeriod === "monthly") return "month";
+  if (selectedPeriod === "quarterly") return "quarter";
+  return "year";
 };
 
 export default function SalesReports() {
@@ -34,6 +46,8 @@ export default function SalesReports() {
   const [error, setError] = useState("");
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const selectedPeriodLabel = PERIOD_LABELS[period] || "Monthly";
+  const periodUnitLabel = getPeriodUnitLabel(period);
 
   const fetchReport = async (selectedPeriod) => {
     setLoading(true);
@@ -106,7 +120,7 @@ export default function SalesReports() {
         <div className="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
           <div>
             <h5 className="mb-1">Generate Report</h5>
-            <small className="text-muted">Choose report period: monthly, quarterly, yearly</small>
+            <small className="text-muted">Choose report period: monthly, quarterly, annual</small>
           </div>
 
           <div className="d-flex gap-2 align-items-center">
@@ -182,7 +196,10 @@ export default function SalesReports() {
 
           <div className="card shadow-sm mb-4">
             <div className="card-body">
-              <h5 className="mb-3">Product Sales Graph (Top 10 by Qty)</h5>
+              <h5 className="mb-1">Top Products for {selectedPeriodLabel} Report</h5>
+              <p className="text-muted small mb-3">
+                This chart shows the 10 best-selling products based on quantity sold in the selected period.
+              </p>
 
               {chartData.length === 0 ? (
                 <p className="text-muted mb-0">No sales data found for selected period.</p>
@@ -202,13 +219,17 @@ export default function SalesReports() {
                       style={{ fontSize: "12px" }}
                     />
                     <YAxis label={{ value: "Quantity Sold", angle: -90, position: "insideLeft" }} />
-                    <Tooltip />
+                    <Tooltip
+                      formatter={(value) => [`${value} units`, "Units Sold"]}
+                      labelFormatter={(label) => `Product: ${label}`}
+                    />
                     <Legend />
                     <Bar
                       dataKey="qty"
-                      name="Quantity Sold"
+                      name="Units Sold"
                       fill="#8884d8"
                       radius={[8, 8, 0, 0]}
+                      barSize={36}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -400,14 +421,17 @@ export default function SalesReports() {
 
           <div className="card shadow-sm mb-4">
             <div className="card-body">
-              <h5 className="mb-3">Sales Trend by {period.charAt(0).toUpperCase() + period.slice(1)}</h5>
+              <h5 className="mb-1">{selectedPeriodLabel} Sales vs Orders Comparison</h5>
+              <p className="text-muted small mb-3">
+                Compare total sales amount and total number of orders across each {periodUnitLabel} in the selected report.
+              </p>
 
               {(!report.salesTrend || report.salesTrend.length === 0) ? (
                 <p className="text-muted mb-0">No sales data available.</p>
               ) : (
                 <>
                   <ResponsiveContainer width="100%" height={400}>
-                    <LineChart
+                    <BarChart
                       data={report.salesTrend}
                       margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                     >
@@ -432,36 +456,34 @@ export default function SalesReports() {
                       />
                       <Tooltip 
                         formatter={(value, name) => {
-                          if (name === "Sales") return [`₹${value.toFixed(2)}`, name];
-                          return [value, name];
+                          if (name === "Total Sales") return [formatCurrency(value), name];
+                          return [`${value} orders`, name];
                         }}
+                        labelFormatter={(label) => `${selectedPeriodLabel} Period: ${label}`}
                       />
                       <Legend />
-                      <Line
+                      <Bar
                         yAxisId="left"
-                        type="monotone"
                         dataKey="sales"
-                        name="Sales"
-                        stroke="#8884d8"
-                        strokeWidth={3}
-                        dot={{ r: 5 }}
-                        activeDot={{ r: 7 }}
+                        name="Total Sales"
+                        fill="#8884d8"
+                        radius={[6, 6, 0, 0]}
+                        barSize={28}
                       />
-                      <Line
+                      <Bar
                         yAxisId="right"
-                        type="monotone"
                         dataKey="orders"
-                        name="Orders"
-                        stroke="#ffc658"
-                        strokeWidth={2}
-                        dot={{ r: 4 }}
+                        name="Total Orders"
+                        fill="#ffc658"
+                        radius={[6, 6, 0, 0]}
+                        barSize={28}
                       />
-                    </LineChart>
+                    </BarChart>
                   </ResponsiveContainer>
                   
                   <div className="mt-3">
                     <small className="text-muted">
-                      Showing {report.salesTrend.length} {period === "monthly" ? "month" : period === "quarterly" ? "quarter" : "year"}{report.salesTrend.length !== 1 ? 's' : ''} of sales data
+                      Showing {report.salesTrend.length} {periodUnitLabel}{report.salesTrend.length !== 1 ? 's' : ''} of comparison data
                     </small>
                   </div>
                 </>
