@@ -7,6 +7,9 @@ function OrderForm() {
 
   const [cartItems, setCartItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState("COD");
+  const [message, setMessage] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const [formData, setFormData] = useState({
     name: "",
@@ -32,8 +35,7 @@ function OrderForm() {
       // Cart checkout - use all cart items
       const cart = JSON.parse(localStorage.getItem("cart")) || [];
       if (cart.length === 0) {
-        alert("Cart is empty");
-        navigate("/products");
+        setMessage({ type: "warning", text: "Your cart is empty. Add products before placing an order." });
         return;
       }
       setCartItems(cart);
@@ -44,17 +46,39 @@ function OrderForm() {
      FORM HANDLING
      =============================== */
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    if (fieldErrors[name]) {
+      setFieldErrors({ ...fieldErrors, [name]: "" });
+    }
   };
 
   const validateForm = () => {
     const { name, email, address, phone, pincode } = formData;
+    const errors = {};
 
-    if (name.trim().length < 3) return alert("Name must be at least 3 characters");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return alert("Please enter a valid email");
-    if (address.trim().length < 5) return alert("Address must be at least 5 characters");
-    if (!/^[0-9]{10}$/.test(phone)) return alert("Phone must be 10 digits");
-    if (!/^[0-9]{6}$/.test(pincode)) return alert("Pincode must be 6 digits");
+    if (name.trim().length < 3) {
+      errors.name = "Name must be at least 3 characters.";
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = "Please enter a valid email address.";
+    }
+    if (address.trim().length < 5) {
+      errors.address = "Address must be at least 5 characters.";
+    }
+    if (!/^[0-9]{10}$/.test(phone)) {
+      errors.phone = "Phone must be 10 digits.";
+    }
+    if (!/^[0-9]{6}$/.test(pincode)) {
+      errors.pincode = "Pincode must be 6 digits.";
+    }
+
+    setFieldErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setMessage({ type: "danger", text: "Please fix the highlighted fields." });
+      return false;
+    }
 
     return true;
   };
@@ -72,6 +96,8 @@ function OrderForm() {
      =============================== */
   const handleOrder = async (e) => {
     e.preventDefault();
+    setMessage(null);
+    setFieldErrors({});
     if (!validateForm()) return;
 
     const payload = {
@@ -99,6 +125,7 @@ function OrderForm() {
     };
 
     try {
+      setSubmitting(true);
       const res = await fetch(`${API_URL}/api/orders/cart`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -110,15 +137,15 @@ function OrderForm() {
       if (!res.ok) {
         // Show specific error messages from backend
         if (data.error === "Insufficient stock" && data.details) {
-          const errorMsg = "Stock Unavailable:\n" + data.details.join("\n");
-          alert(errorMsg);
+          const errorMsg = `Stock unavailable: ${data.details.join(" ")}`;
+          setMessage({ type: "danger", text: errorMsg });
         } else {
-          alert(data.error || "Failed to place order");
+          setMessage({ type: "danger", text: data.error || "Failed to place order." });
         }
         return;
       }
 
-      alert("✅ Order placed successfully");
+      setMessage({ type: "success", text: "Order placed successfully." });
       
       // Check if this was a direct buy or cart order
       const directBuyItem = sessionStorage.getItem("directBuyItem");
@@ -132,11 +159,15 @@ function OrderForm() {
         // Dispatch custom event to notify navbar (cart cleared)
         window.dispatchEvent(new Event("cartUpdated"));
       }
-      
-      navigate("/products");
+
+      setTimeout(() => {
+        navigate("/products");
+      }, 1200);
     } catch (err) {
       console.error("Order error:", err);
-      alert("Something went wrong");
+      setMessage({ type: "danger", text: "Something went wrong while placing the order." });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -165,12 +196,94 @@ function OrderForm() {
         </div>
 
         <form onSubmit={handleOrder}>
-          <input name="name" placeholder="Your Name" onChange={handleChange} style={inputStyle} required />
-          <input name="email" type="email" placeholder="Your Email" onChange={handleChange} style={inputStyle} required />
-          <input name="address" placeholder="Your Address" onChange={handleChange} style={inputStyle} required />
-          <input name="phone" placeholder="Phone Number" onChange={handleChange} style={inputStyle} required />
-          <input name="landmark" placeholder="Landmark" onChange={handleChange} style={inputStyle} />
-          <input name="pincode" placeholder="Pincode" onChange={handleChange} style={inputStyle} required />
+          {message && (
+            <div className={`alert alert-${message.type} alert-dismissible fade show`} role="alert">
+              {message.text}
+              <button
+                type="button"
+                className="btn-close"
+                aria-label="Close"
+                onClick={() => setMessage(null)}
+              ></button>
+            </div>
+          )}
+
+          <div className="mb-3">
+            <input
+              name="name"
+              placeholder="Your Name"
+              value={formData.name}
+              onChange={handleChange}
+              style={inputStyle}
+              className={`form-control ${fieldErrors.name ? "is-invalid" : ""}`}
+              required
+            />
+            {fieldErrors.name && <div className="invalid-feedback d-block">{fieldErrors.name}</div>}
+          </div>
+
+          <div className="mb-3">
+            <input
+              name="email"
+              type="email"
+              placeholder="Your Email"
+              value={formData.email}
+              onChange={handleChange}
+              style={inputStyle}
+              className={`form-control ${fieldErrors.email ? "is-invalid" : ""}`}
+              required
+            />
+            {fieldErrors.email && <div className="invalid-feedback d-block">{fieldErrors.email}</div>}
+          </div>
+
+          <div className="mb-3">
+            <input
+              name="address"
+              placeholder="Your Address"
+              value={formData.address}
+              onChange={handleChange}
+              style={inputStyle}
+              className={`form-control ${fieldErrors.address ? "is-invalid" : ""}`}
+              required
+            />
+            {fieldErrors.address && <div className="invalid-feedback d-block">{fieldErrors.address}</div>}
+          </div>
+
+          <div className="mb-3">
+            <input
+              name="phone"
+              placeholder="Phone Number"
+              value={formData.phone}
+              onChange={handleChange}
+              style={inputStyle}
+              className={`form-control ${fieldErrors.phone ? "is-invalid" : ""}`}
+              required
+            />
+            {fieldErrors.phone && <div className="invalid-feedback d-block">{fieldErrors.phone}</div>}
+          </div>
+
+          <div className="mb-3">
+            <input
+              name="landmark"
+              placeholder="Landmark"
+              value={formData.landmark}
+              onChange={handleChange}
+              style={inputStyle}
+              className="form-control"
+            />
+          </div>
+
+          <div className="mb-3">
+            <input
+              name="pincode"
+              placeholder="Pincode"
+              value={formData.pincode}
+              onChange={handleChange}
+              style={inputStyle}
+              className={`form-control ${fieldErrors.pincode ? "is-invalid" : ""}`}
+              required
+            />
+            {fieldErrors.pincode && <div className="invalid-feedback d-block">{fieldErrors.pincode}</div>}
+          </div>
 
           <div style={{ marginBottom: "16px" }}>
             <strong>Payment Method</strong>
@@ -198,7 +311,9 @@ function OrderForm() {
             </div>
           </div>
 
-          <button type="submit" style={submitBtn}>Confirm Order</button>
+          <button type="submit" style={submitBtn} disabled={submitting}>
+            {submitting ? "Placing Order..." : "Confirm Order"}
+          </button>
           <button type="button" onClick={() => navigate("/products")} style={cancelBtn}>Cancel</button>
         </form>
       </div>

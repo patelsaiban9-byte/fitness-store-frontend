@@ -5,6 +5,7 @@ function MyOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(null);
+  const [cancelling, setCancelling] = useState(null);
   const [returns, setReturns] = useState([]);
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -54,26 +55,26 @@ function MyOrders() {
   // ✅ LOGIN STORES userId
   const userId = localStorage.getItem("userId");
 
+  const fetchMyOrders = async () => {
+    try {
+      const res = await fetch(
+        `${API_URL}/api/orders/my/user/${userId}`
+      );
+      const data = await res.json();
+      setOrders(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("❌ Fetch my orders error:", err);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!userId) {
       navigate("/login");
       return;
     }
-
-    const fetchMyOrders = async () => {
-      try {
-        const res = await fetch(
-          `${API_URL}/api/orders/my/user/${userId}`
-        );
-        const data = await res.json();
-        setOrders(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("❌ Fetch my orders error:", err);
-        setOrders([]);
-      } finally {
-        setLoading(false);
-      }
-    };
 
     const fetchMyReturns = async () => {
       try {
@@ -141,6 +142,72 @@ function MyOrders() {
   // Check if order has a return request
   const getReturnStatus = (orderId) => {
     return returns.find(r => r.orderId?._id === orderId);
+  };
+
+  const canCancelOrder = (status) => {
+    return ["PLACED", "CONFIRMED"].includes(status || "PLACED");
+  };
+
+  const getCancelButtonTitle = (status) => {
+    if (canCancelOrder(status)) {
+      return "Cancel this order";
+    }
+
+    if (status === "SHIPPED") {
+      return "Order cannot be cancelled after it is shipped";
+    }
+
+    if (status === "OUT_FOR_DELIVERY") {
+      return "Order cannot be cancelled once it is out for delivery";
+    }
+
+    if (status === "DELIVERED") {
+      return "Delivered orders cannot be cancelled";
+    }
+
+    if (status === "CANCELLED") {
+      return "Order is already cancelled";
+    }
+
+    if (status === "RETURNED") {
+      return "Returned orders cannot be cancelled";
+    }
+
+    return "Order cannot be cancelled in the current status";
+  };
+
+  const handleCancelOrder = async (order) => {
+    if (!canCancelOrder(order.orderStatus)) {
+      return;
+    }
+
+    if (!window.confirm("Cancel this order?")) {
+      return;
+    }
+
+    try {
+      setCancelling(order._id);
+      const res = await fetch(`${API_URL}/api/orders/cancel/${order._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Failed to cancel order");
+        return;
+      }
+
+      alert("Order cancelled successfully");
+      await fetchMyOrders();
+    } catch (err) {
+      console.error("❌ Cancel order error:", err);
+      alert("Failed to cancel order");
+    } finally {
+      setCancelling(null);
+    }
   };
 
   /* ===============================
@@ -353,7 +420,7 @@ function MyOrders() {
                     )}
 
                     {/* INVOICE DOWNLOAD & RETURN REQUEST */}
-                    <div className="d-flex gap-2">
+                    <div className="d-flex gap-2 flex-wrap">
                       <button
                         className="btn btn-primary"
                         onClick={async () => {
@@ -385,6 +452,18 @@ function MyOrders() {
                         {downloading === order._id
                           ? "📥 Downloading..."
                           : "📄 Download Invoice"}
+                      </button>
+
+                      <button
+                        className={`btn ${canCancelOrder(order.orderStatus) ? "btn-outline-danger" : "btn-outline-secondary"}`}
+                        onClick={() => handleCancelOrder(order)}
+                        disabled={
+                          cancelling === order._id ||
+                          !canCancelOrder(order.orderStatus)
+                        }
+                        title={getCancelButtonTitle(order.orderStatus || "PLACED")}
+                      >
+                        {cancelling === order._id ? "Cancelling..." : "Cancel Order"}
                       </button>
 
                       {/* RETURN REQUEST BUTTON */}
