@@ -21,6 +21,7 @@ import Cart from "./pages/cart";
 import OrderForm from "./pages/orderform";
 import About from "./pages/about";
 import ProductDetail from "./pages/ProductDetail";
+import Feedback from "./pages/Feedback";
 
 
 // Admin pages
@@ -29,6 +30,7 @@ import AdminOrders from "./pages/adminorder";
 import OrderDetail from "./pages/OrderDetail";
 import SalesReports from "./pages/SalesReports";
 import AdminReturns from "./pages/AdminReturns";
+import AdminFeedback from "./pages/AdminFeedback";
 
 // ✅ NEW PAGE
 import MyOrders from "./pages/MyOrders";
@@ -239,6 +241,16 @@ function App() {
             }
           />
 
+          {/* User Feedback */}
+          <Route
+            path="/feedback"
+            element={
+              <ProtectedRoute isLoggedIn={isLoggedIn}>
+                <Feedback />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Admin Dashboard */}
           <Route
             path="/admin"
@@ -313,6 +325,19 @@ function App() {
                 userRole={userRole}
               >
                 <AdminReturns />
+              </AdminRoute>
+            }
+          />
+
+          {/* Admin Feedback */}
+          <Route
+            path="/admin/feedback"
+            element={
+              <AdminRoute
+                isLoggedIn={isLoggedIn}
+                userRole={userRole}
+              >
+                <AdminFeedback />
               </AdminRoute>
             }
           />

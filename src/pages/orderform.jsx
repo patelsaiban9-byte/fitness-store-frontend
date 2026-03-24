@@ -161,7 +161,7 @@ function OrderForm() {
       }
 
       setTimeout(() => {
-        navigate("/products");
+        navigate("/feedback");
       }, 1200);
     } catch (err) {
       console.error("Order error:", err);

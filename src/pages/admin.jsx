@@ -207,6 +207,9 @@ function Admin() {
         <Link to="/admin/reports" className="btn btn-info text-white">
           � View Sales Reports
         </Link>
+        <Link to="/admin/feedback" className="btn btn-secondary">
+          📝 View Feedback
+        </Link>
       </div>
 
       <div className="card shadow-sm mb-4">

@@ -140,6 +140,18 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                   </li>
                 )}
 
+                {userRole !== "admin" && (
+                  <li className="nav-item">
+                    <Link
+                      className="nav-link text-white fw-semibold mx-1"
+                      to="/feedback"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Feedback
+                    </Link>
+                  </li>
+                )}
+
                 {/* ABOUT */}
                 <li className="nav-item">
                   <Link
@@ -181,6 +193,16 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                         onClick={() => setIsOpen(false)}
                       >
                         Returns
+                      </Link>
+                    </li>
+
+                    <li className="nav-item">
+                      <Link
+                        className="nav-link text-warning fw-bolder mx-1"
+                        to="/admin/feedback"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Feedback
                       </Link>
                     </li>
                   </>

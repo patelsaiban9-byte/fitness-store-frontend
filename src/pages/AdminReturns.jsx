@@ -9,6 +9,7 @@ function AdminReturns() {
   const [adminNotes, setAdminNotes] = useState("");
   const [processing, setProcessing] = useState(false);
   const [filterStatus, setFilterStatus] = useState("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -133,9 +134,31 @@ function AdminReturns() {
     return badgeClasses[status] || "bg-secondary";
   };
 
-  const filteredReturns = filterStatus === "ALL" 
-    ? returns 
-    : returns.filter(r => r.status === filterStatus);
+  const filteredReturns = returns.filter((r) => {
+    const matchesStatus = filterStatus === "ALL" || r.status === filterStatus;
+
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) {
+      return matchesStatus;
+    }
+
+    const returnId = String(r._id || "").toLowerCase();
+    const orderId = String(r.orderId?._id || "").toLowerCase();
+    const customerName = String(r.userId?.name || "").toLowerCase();
+    const customerEmail = String(r.userId?.email || "").toLowerCase();
+    const reason = String(r.reason || "").toLowerCase();
+    const status = String(r.status || "").toLowerCase();
+
+    const matchesSearch =
+      returnId.includes(query) ||
+      orderId.includes(query) ||
+      customerName.includes(query) ||
+      customerEmail.includes(query) ||
+      reason.includes(query) ||
+      status.includes(query);
+
+    return matchesStatus && matchesSearch;
+  });
 
   if (loading) {
     return (
@@ -179,6 +202,34 @@ function AdminReturns() {
               Rejected ({returns.filter(r => r.status === "REJECTED").length})
             </button>
           </div>
+        </div>
+      </div>
+
+      <div className="row mb-4">
+        <div className="col-12">
+          <div className="input-group">
+            <span className="input-group-text bg-primary text-white">🔍</span>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Search by Return ID, Order ID, Customer, Email, Reason, or Status..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoComplete="off"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={() => setSearchQuery("")}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <small className="text-muted d-block mt-2">
+            Showing {filteredReturns.length} of {returns.length} return request(s)
+          </small>
         </div>
       </div>
 
