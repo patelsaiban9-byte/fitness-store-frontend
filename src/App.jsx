@@ -31,6 +31,7 @@ import OrderDetail from "./pages/OrderDetail";
 import SalesReports from "./pages/SalesReports";
 import AdminReturns from "./pages/AdminReturns";
 import AdminFeedback from "./pages/AdminFeedback";
+import AdminUsers from "./pages/AdminUsers";
 
 // ✅ NEW PAGE
 import MyOrders from "./pages/MyOrders";
@@ -338,6 +339,19 @@ function App() {
                 userRole={userRole}
               >
                 <AdminFeedback />
+              </AdminRoute>
+            }
+          />
+
+          {/* Admin User Management */}
+          <Route
+            path="/admin/users"
+            element={
+              <AdminRoute
+                isLoggedIn={isLoggedIn}
+                userRole={userRole}
+              >
+                <AdminUsers />
               </AdminRoute>
             }
           />

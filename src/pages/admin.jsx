@@ -204,6 +204,9 @@ function Admin() {
         <Link to="/admin/orders" className="btn btn-success">
           📦 View All Orders
         </Link>
+        <Link to="/admin/users" className="btn btn-dark">
+          👥 Manage Users
+        </Link>
         <Link to="/admin/reports" className="btn btn-info text-white">
           � View Sales Reports
         </Link>
