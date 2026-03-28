@@ -5,6 +5,8 @@ import { Logo } from "../assets/logo";
 function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const isAdmin = userRole === "admin";
+  const isUser = isLoggedIn && !isAdmin;
 
   // ✅ Cart count state
   const [cartCount, setCartCount] = useState(0);
@@ -46,7 +48,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
     // 🛒 Keep cart data - only clear on order placement
     setIsLoggedIn(false);
     setUserRole(null);
-    navigate("/login");
+    navigate(isAdmin ? "/admin/login" : "/login");
     setIsOpen(false);
   };
 
@@ -82,165 +84,169 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
         {/* LINKS */}
         <div className={`collapse navbar-collapse ${isOpen ? "show" : ""}`}>
           <ul className="navbar-nav ms-auto align-items-center">
-            {isLoggedIn && (
+            {/* PUBLIC LINKS */}
+            <li className="nav-item">
+              <Link
+                className="nav-link text-white fw-semibold mx-1"
+                to="/"
+                onClick={() => setIsOpen(false)}
+              >
+                Home
+              </Link>
+            </li>
+
+            <li className="nav-item">
+              <Link
+                className="nav-link text-white fw-semibold mx-1"
+                to="/products"
+                onClick={() => setIsOpen(false)}
+              >
+                Products
+              </Link>
+            </li>
+
+            <li className="nav-item">
+              <Link
+                className="nav-link text-white fw-semibold mx-1"
+                to="/about"
+                onClick={() => setIsOpen(false)}
+              >
+                About Us
+              </Link>
+            </li>
+
+            {/* 🛒 CART (NON-ADMIN) */}
+            {!isAdmin && (
+              <li className="nav-item position-relative">
+                <Link
+                  className="nav-link text-white fw-semibold mx-1"
+                  to="/cart"
+                  onClick={() => setIsOpen(false)}
+                >
+                  🛒 Cart
+                  {cartCount > 0 && (
+                    <span
+                      className="badge bg-warning text-dark ms-1"
+                      style={{ fontSize: "0.7rem" }}
+                    >
+                      {cartCount}
+                    </span>
+                  )}
+                </Link>
+              </li>
+            )}
+
+            {/* USER LINKS */}
+            {isUser && (
+              <li className="nav-item">
+                <Link
+                  className="nav-link text-white fw-semibold mx-1"
+                  to="/my-orders"
+                  onClick={() => setIsOpen(false)}
+                >
+                  My Orders
+                </Link>
+              </li>
+            )}
+
+            {isUser && (
+              <li className="nav-item">
+                <Link
+                  className="nav-link text-white fw-semibold mx-1"
+                  to="/feedback"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Feedback
+                </Link>
+              </li>
+            )}
+
+            {/* ADMIN LINKS */}
+            {isAdmin && (
               <>
-                {/* HOME */}
                 <li className="nav-item">
                   <Link
-                    className="nav-link text-white fw-semibold mx-1"
-                    to="/"
+                    className="nav-link text-warning fw-bolder mx-1"
+                    to="/admin"
                     onClick={() => setIsOpen(false)}
                   >
-                    Home
+                    Admin
                   </Link>
                 </li>
 
-                {/* PRODUCTS */}
                 <li className="nav-item">
                   <Link
-                    className="nav-link text-white fw-semibold mx-1"
-                    to="/products"
+                    className="nav-link text-warning fw-bolder mx-1"
+                    to="/admin/users"
                     onClick={() => setIsOpen(false)}
                   >
-                    Products
+                    Users
                   </Link>
                 </li>
 
-                {/* 🛒 CART (USER ONLY) */}
-                {userRole !== "admin" && (
-                  <li className="nav-item position-relative">
-                    <Link
-                      className="nav-link text-white fw-semibold mx-1"
-                      to="/cart"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      🛒 Cart
-                      {cartCount > 0 && (
-                        <span
-                          className="badge bg-warning text-dark ms-1"
-                          style={{ fontSize: "0.7rem" }}
-                        >
-                          {cartCount}
-                        </span>
-                      )}
-                    </Link>
-                  </li>
-                )}
-
-                {/* 📦 MY ORDERS (USER ONLY) */}
-                {userRole !== "admin" && (
-                  <li className="nav-item">
-                    <Link
-                      className="nav-link text-white fw-semibold mx-1"
-                      to="/my-orders"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      My Orders
-                    </Link>
-                  </li>
-                )}
-
-                {userRole !== "admin" && (
-                  <li className="nav-item">
-                    <Link
-                      className="nav-link text-white fw-semibold mx-1"
-                      to="/feedback"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Feedback
-                    </Link>
-                  </li>
-                )}
-
-                {/* ABOUT */}
                 <li className="nav-item">
                   <Link
-                    className="nav-link text-white fw-semibold mx-1"
-                    to="/about"
+                    className="nav-link text-warning fw-bolder mx-1"
+                    to="/admin/reports"
                     onClick={() => setIsOpen(false)}
                   >
-                    About Us
+                    Sales Reports
                   </Link>
                 </li>
 
-                {/* ADMIN LINKS */}
-                {userRole === "admin" && (
-                  <>
-                    <li className="nav-item">
-                      <Link
-                        className="nav-link text-warning fw-bolder mx-1"
-                        to="/admin"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Admin
-                      </Link>
-                    </li>
-
-                    <li className="nav-item">
-                      <Link
-                        className="nav-link text-warning fw-bolder mx-1"
-                        to="/admin/users"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Users
-                      </Link>
-                    </li>
-
-                    <li className="nav-item">
-                      <Link
-                        className="nav-link text-warning fw-bolder mx-1"
-                        to="/admin/reports"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Sales Reports
-                      </Link>
-                    </li>
-
-                    <li className="nav-item">
-                      <Link
-                        className="nav-link text-warning fw-bolder mx-1"
-                        to="/admin/returns"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Returns
-                      </Link>
-                    </li>
-
-                    <li className="nav-item">
-                      <Link
-                        className="nav-link text-warning fw-bolder mx-1"
-                        to="/admin/feedback"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Feedback
-                      </Link>
-                    </li>
-                  </>
-                )}
-
-                {/* LOGOUT */}
                 <li className="nav-item">
-                  <button
-                    className="btn btn-danger fw-bold ms-lg-2 px-3"
-                    onClick={handleLogout}
+                  <Link
+                    className="nav-link text-warning fw-bolder mx-1"
+                    to="/admin/returns"
+                    onClick={() => setIsOpen(false)}
                   >
-                    Logout
-                  </button>
+                    Returns
+                  </Link>
+                </li>
+
+                <li className="nav-item">
+                  <Link
+                    className="nav-link text-warning fw-bolder mx-1"
+                    to="/admin/feedback"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Feedback
+                  </Link>
                 </li>
               </>
             )}
 
-            {/* LOGIN */}
-            {!isLoggedIn && (
+            {/* AUTH ACTIONS */}
+            {isLoggedIn ? (
               <li className="nav-item">
-                <Link
-                  className="btn btn-warning fw-bold text-dark ms-lg-2 px-3"
-                  to="/login"
-                  onClick={() => setIsOpen(false)}
+                <button
+                  className="btn btn-danger fw-bold ms-lg-2 px-3"
+                  onClick={handleLogout}
                 >
-                  Login
-                </Link>
+                  Logout
+                </button>
               </li>
+            ) : (
+              <>
+                <li className="nav-item">
+                  <Link
+                    className="btn btn-warning fw-bold text-dark ms-lg-2 px-3"
+                    to="/login"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    User Login
+                  </Link>
+                </li>
+                <li className="nav-item mt-2 mt-lg-0">
+                  <Link
+                    className="btn btn-outline-light fw-bold ms-lg-2 px-3"
+                    to="/admin/login"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Admin Login
+                  </Link>
+                </li>
+              </>
             )}
           </ul>
         </div>

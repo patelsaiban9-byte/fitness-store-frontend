@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import "./auth.css";
 
 // Helper component for the Bootstrap Toast
@@ -29,11 +29,15 @@ const Toast = ({ message, type, show, onClose }) => {
   );
 };
 
-function Login({ setIsLoggedIn, setUserRole }) {
+function Login({ setIsLoggedIn, setUserRole, mode = "user" }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isAdminMode = mode === "admin";
+  const redirectFrom = location.state?.from;
 
   const [toast, setToast] = useState({
     show: false,
@@ -70,6 +74,17 @@ function Login({ setIsLoggedIn, setUserRole }) {
         return;
       }
 
+      // Keep user/admin login UIs separated even when backend uses one endpoint.
+      if (!isAdminMode && data.user.role === "admin") {
+        setError("Admin accounts must sign in from the admin login page.");
+        return;
+      }
+
+      if (isAdminMode && data.user.role !== "admin") {
+        setError("This page is only for admin accounts.");
+        return;
+      }
+
       // 🔐 EXISTING LOGIC (UNCHANGED)
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.user.role);
@@ -88,10 +103,18 @@ function Login({ setIsLoggedIn, setUserRole }) {
       showToast("✅ Login Successful", "success");
 
       setTimeout(() => {
-        if (data.user.role === "admin") {
-          navigate("/admin");
+        if (isAdminMode) {
+          navigate(
+            typeof redirectFrom === "string" && redirectFrom.startsWith("/admin")
+              ? redirectFrom
+              : "/admin"
+          );
         } else {
-          navigate("/");
+          navigate(
+            typeof redirectFrom === "string" && redirectFrom.startsWith("/")
+              ? redirectFrom
+              : "/"
+          );
         }
       }, 1000);
     } catch (err) {
@@ -114,17 +137,23 @@ function Login({ setIsLoggedIn, setUserRole }) {
           {/* Left Side */}
           <div className="auth-side auth-side-left">
             <div className="auth-branding">
-              <h2 className="auth-title">Welcome Back</h2>
-              <p className="auth-subtitle">Sign in to your account to continue</p>
+              <h2 className="auth-title">
+                {isAdminMode ? "Admin Access" : "Welcome Back"}
+              </h2>
+              <p className="auth-subtitle">
+                {isAdminMode
+                  ? "Sign in with your admin account"
+                  : "Sign in to your account to continue"}
+              </p>
               <div className="auth-features">
                 <div className="feature">
-                  <span>✓</span> Access Your Account
+                  <span>✓</span> {isAdminMode ? "Manage Store Operations" : "Access Your Account"}
                 </div>
                 <div className="feature">
-                  <span>✓</span> Track Your Orders
+                  <span>✓</span> {isAdminMode ? "Monitor Orders & Returns" : "Track Your Orders"}
                 </div>
                 <div className="feature">
-                  <span>✓</span> Exclusive Deals
+                  <span>✓</span> {isAdminMode ? "Review Reports & Users" : "Exclusive Deals"}
                 </div>
               </div>
             </div>
@@ -134,7 +163,9 @@ function Login({ setIsLoggedIn, setUserRole }) {
           <div className="auth-side auth-side-right">
             <div className="auth-form-wrapper">
               <div className="auth-form-header">
-                <h3 className="auth-form-title">Sign In</h3>
+                <h3 className="auth-form-title">
+                  {isAdminMode ? "Admin Sign In" : "Sign In"}
+                </h3>
               </div>
 
               {error && (
@@ -172,25 +203,44 @@ function Login({ setIsLoggedIn, setUserRole }) {
                   </div>
                 </div>
 
-                <div className="text-end mb-3">
-                  <Link to="/forgot-password" className="link-primary">
-                    Forgot Password?
-                  </Link>
-                </div>
+                {!isAdminMode && (
+                  <div className="text-end mb-3">
+                    <Link to="/forgot-password" className="link-primary">
+                      Forgot Password?
+                    </Link>
+                  </div>
+                )}
 
                 <button type="submit" className="auth-button">
-                  Sign In
+                  {isAdminMode ? "Sign In as Admin" : "Sign In"}
                 </button>
               </form>
 
               <div className="auth-divider">or</div>
 
-              <p className="auth-link">
-                Don't have an account?{" "}
-                <Link to="/register" className="link-primary">
-                  Create one now
-                </Link>
-              </p>
+              {isAdminMode ? (
+                <p className="auth-link">
+                  Not an admin?{" "}
+                  <Link to="/login" className="link-primary">
+                    User Login
+                  </Link>
+                </p>
+              ) : (
+                <>
+                  <p className="auth-link">
+                    Don't have an account?{" "}
+                    <Link to="/register" className="link-primary">
+                      Create one now
+                    </Link>
+                  </p>
+                  <p className="auth-link mt-2">
+                    Admin account?{" "}
+                    <Link to="/admin/login" className="link-primary">
+                      Go to Admin Login
+                    </Link>
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -37,15 +37,50 @@ import AdminUsers from "./pages/AdminUsers";
 import MyOrders from "./pages/MyOrders";
 
 /* ===============================
-   ROUTE PROTECTION (OLD LOGIC)
+   ROUTE PROTECTION
    =============================== */
-function ProtectedRoute({ isLoggedIn, children }) {
-  if (!isLoggedIn) return <Navigate to="/login" replace />;
+function getRedirectPath(location) {
+  return `${location.pathname}${location.search}${location.hash}`;
+}
+
+function PublicOnlyRoute({ isLoggedIn, userRole, children }) {
+  if (!isLoggedIn) return children;
+  return <Navigate to={userRole === "admin" ? "/admin" : "/"} replace />;
+}
+
+function UserRoute({ isLoggedIn, userRole, children }) {
+  const location = useLocation();
+
+  if (!isLoggedIn) {
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: getRedirectPath(location) }}
+      />
+    );
+  }
+
+  if (userRole !== "user") {
+    return <Navigate to={userRole === "admin" ? "/admin" : "/"} replace />;
+  }
+
   return children;
 }
 
 function AdminRoute({ isLoggedIn, userRole, children }) {
-  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  const location = useLocation();
+
+  if (!isLoggedIn) {
+    return (
+      <Navigate
+        to="/admin/login"
+        replace
+        state={{ from: getRedirectPath(location) }}
+      />
+    );
+  }
+
   if (userRole !== "admin") return <Navigate to="/" replace />;
   return children;
 }
@@ -61,7 +96,7 @@ function Layout({
   setUserRole,
 }) {
   const location = useLocation();
-  const hideNavbar = ["/login", "/register", "/forgot-password"].includes(location.pathname);
+  const hideNavbar = ["/login", "/admin/login", "/register", "/forgot-password"].includes(location.pathname);
 
   return (
     <>
@@ -153,102 +188,81 @@ function App() {
           <Route
             path="/login"
             element={
-              <Login
-                setIsLoggedIn={setIsLoggedIn}
-                setUserRole={setUserRole}
-              />
+              <PublicOnlyRoute isLoggedIn={isLoggedIn} userRole={userRole}>
+                <Login
+                  mode="user"
+                  setIsLoggedIn={setIsLoggedIn}
+                  setUserRole={setUserRole}
+                />
+              </PublicOnlyRoute>
+            }
+          />
+          <Route
+            path="/admin/login"
+            element={
+              <PublicOnlyRoute isLoggedIn={isLoggedIn} userRole={userRole}>
+                <Login
+                  mode="admin"
+                  setIsLoggedIn={setIsLoggedIn}
+                  setUserRole={setUserRole}
+                />
+              </PublicOnlyRoute>
             }
           />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* Home */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute isLoggedIn={isLoggedIn}>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Products */}
-          <Route
-            path="/products"
-            element={
-              <ProtectedRoute isLoggedIn={isLoggedIn}>
-                <Products />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Cart */}
-          <Route
-            path="/cart"
-            element={
-              <ProtectedRoute isLoggedIn={isLoggedIn}>
-                <Cart />
-              </ProtectedRoute>
-            }
-          />
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
 
           {/* My Orders (USER) */}
           <Route
             path="/my-orders"
             element={
-              <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <UserRoute isLoggedIn={isLoggedIn} userRole={userRole}>
                 <MyOrders />
-              </ProtectedRoute>
+              </UserRoute>
             }
           />
 
-          {/* Checkout */}
+          {/* User Protected Routes */}
           <Route
             path="/checkout"
             element={
-              <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <UserRoute isLoggedIn={isLoggedIn} userRole={userRole}>
                 <OrderForm />
-              </ProtectedRoute>
+              </UserRoute>
             }
           />
 
-          {/* Buy Now - Direct Order */}
           <Route
             path="/buynow"
             element={
-              <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <UserRoute isLoggedIn={isLoggedIn} userRole={userRole}>
                 <OrderForm />
-              </ProtectedRoute>
+              </UserRoute>
             }
           />
 
-          {/* Order Form (Legacy Route) */}
           <Route
             path="/order/:id"
             element={
-              <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <UserRoute isLoggedIn={isLoggedIn} userRole={userRole}>
                 <OrderForm />
-              </ProtectedRoute>
+              </UserRoute>
             }
           />
 
-          {/* About */}
-          <Route
-            path="/about"
-            element={
-              <ProtectedRoute isLoggedIn={isLoggedIn}>
-                <About />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* User Feedback */}
           <Route
             path="/feedback"
             element={
-              <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <UserRoute isLoggedIn={isLoggedIn} userRole={userRole}>
                 <Feedback />
-              </ProtectedRoute>
+              </UserRoute>
             }
           />
 
@@ -361,21 +375,11 @@ function App() {
             path="*"
             element={
               <Navigate
-                to={isLoggedIn ? "/" : "/login"}
+                to={isLoggedIn ? (userRole === "admin" ? "/admin" : "/") : "/"}
                 replace
               />
             }
           />
-          {/* Product Detail Page */}
-<Route
-  path="/product/:id"
-  element={
-    <ProtectedRoute isLoggedIn={isLoggedIn}>
-      <ProductDetail />
-    </ProtectedRoute>
-  }
-/>
-
         </Routes>
       </Layout>
     </Router>

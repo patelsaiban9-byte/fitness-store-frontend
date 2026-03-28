@@ -103,7 +103,12 @@ function AdminUsers() {
         return;
       }
 
-      showToast(data.message || "User status updated successfully.", "success");
+      const baseMessage = data.message || "User status updated successfully.";
+      if (data.emailNotificationSent === false) {
+        showToast(`${baseMessage} User status changed, but email notification could not be sent.`, "warning");
+      } else {
+        showToast(baseMessage, "success");
+      }
       fetchUsers(searchQuery);
     } catch (error) {
       console.error("Error updating user status:", error);

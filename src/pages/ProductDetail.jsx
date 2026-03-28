@@ -7,6 +7,7 @@ function ProductDetail() {
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const userRole = localStorage.getItem("role");
+  const isLoggedIn = Boolean(localStorage.getItem("token"));
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -109,7 +110,12 @@ function ProductDetail() {
 
     // Save to sessionStorage (temporary, clears when tab closes)
     sessionStorage.setItem("directBuyItem", JSON.stringify(directBuyItem));
-    
+
+    if (!isLoggedIn) {
+      navigate("/login", { state: { from: "/buynow" } });
+      return;
+    }
+
     navigate("/buynow");
   };
 
