@@ -7,9 +7,11 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
   const [isOpen, setIsOpen] = useState(false);
   const isAdmin = userRole === "admin";
   const isUser = isLoggedIn && !isAdmin;
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   // ✅ Cart count state
   const [cartCount, setCartCount] = useState(0);
+  const [pendingReturnCount, setPendingReturnCount] = useState(0);
 
   /* ===============================
      READ CART COUNT FROM localStorage
@@ -38,6 +40,51 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isAdmin || !isLoggedIn) {
+      setPendingReturnCount(0);
+      return;
+    }
+
+    const fetchPendingReturnsCount = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/returns/admin/all`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          },
+        });
+
+        const data = await res.json();
+        const pendingCount = Array.isArray(data)
+          ? data.filter((item) => item?.status === "PENDING").length
+          : 0;
+
+        setPendingReturnCount(pendingCount);
+      } catch {
+        setPendingReturnCount(0);
+      }
+    };
+
+    const handleReturnsUpdated = (event) => {
+      const value = Number(event?.detail?.pendingCount);
+      if (!Number.isNaN(value) && value >= 0) {
+        setPendingReturnCount(value);
+      } else {
+        fetchPendingReturnsCount();
+      }
+    };
+
+    fetchPendingReturnsCount();
+
+    const intervalId = window.setInterval(fetchPendingReturnsCount, 60000);
+    window.addEventListener("returnsUpdated", handleReturnsUpdated);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("returnsUpdated", handleReturnsUpdated);
+    };
+  }, [API_URL, isAdmin, isLoggedIn]);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
@@ -48,6 +95,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
     // 🛒 Keep cart data - only clear on order placement
     setIsLoggedIn(false);
     setUserRole(null);
+    setPendingReturnCount(0);
     navigate(isAdmin ? "/admin/login" : "/login");
     setIsOpen(false);
   };
@@ -201,6 +249,14 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                     onClick={() => setIsOpen(false)}
                   >
                     Returns
+                    {pendingReturnCount > 0 && (
+                      <span
+                        className="badge bg-danger text-white ms-1"
+                        style={{ fontSize: "0.7rem" }}
+                      >
+                        {pendingReturnCount}
+                      </span>
+                    )}
                   </Link>
                 </li>
 

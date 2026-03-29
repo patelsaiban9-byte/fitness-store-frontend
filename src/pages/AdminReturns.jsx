@@ -31,10 +31,25 @@ function AdminReturns() {
       setLoading(true);
       const res = await fetch(`${API_URL}/api/returns/admin/all`);
       const data = await res.json();
-      setReturns(Array.isArray(data) ? data : []);
+      const safeReturns = Array.isArray(data) ? data : [];
+      setReturns(safeReturns);
+      window.dispatchEvent(
+        new CustomEvent("returnsUpdated", {
+          detail: {
+            pendingCount: safeReturns.filter((item) => item?.status === "PENDING").length,
+          },
+        })
+      );
     } catch (err) {
       console.error("❌ Fetch returns error:", err);
       setReturns([]);
+      window.dispatchEvent(
+        new CustomEvent("returnsUpdated", {
+          detail: {
+            pendingCount: 0,
+          },
+        })
+      );
     } finally {
       setLoading(false);
     }
