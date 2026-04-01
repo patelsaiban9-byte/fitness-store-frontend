@@ -201,16 +201,16 @@ function Admin() {
       </h1>
 
       <div className="text-center mb-4 d-flex justify-content-center gap-3 flex-wrap">
-        <Link to="/admin/orders" className="btn btn-success">
+        <Link to="/admin/orders" className="btn btn-primary">
           📦 View All Orders
         </Link>
-        <Link to="/admin/users" className="btn btn-dark">
+        <Link to="/admin/users" className="btn btn-primary">
           👥 Manage Users
         </Link>
-        <Link to="/admin/reports" className="btn btn-info text-white">
+        <Link to="/admin/reports" className="btn btn-primary">
           � View Sales Reports
         </Link>
-        <Link to="/admin/feedback" className="btn btn-secondary">
+        <Link to="/admin/feedback" className="btn btn-primary">
           📝 View Feedback
         </Link>
       </div>

@@ -1,6 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const Toast = ({ message, type, show, onClose }) => {
+  if (!show) return null;
+
+  const alertClass = {
+    success: "alert-success",
+    danger: "alert-danger",
+    warning: "alert-warning",
+  }[type] || "alert-info";
+
+  return (
+    <div
+      className={`alert ${alertClass} alert-dismissible fade show fixed-top mx-auto mt-3`}
+      role="alert"
+      style={{ width: "90%", maxWidth: "520px", zIndex: 1050 }}
+    >
+      {message}
+      <button type="button" className="btn-close" onClick={onClose}></button>
+    </div>
+  );
+};
+
 /*
   Cart Page
   ---------
@@ -15,8 +36,14 @@ function Cart() {
   const [cart, setCart] = useState([]);
   const [products, setProducts] = useState({});
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState({ show: false, message: "", type: "info" });
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+  const showToast = (message, type = "info") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: "", type: "info" }), 3000);
+  };
 
   // Load cart from localStorage and fetch product data on page load
   useEffect(() => {
@@ -59,7 +86,7 @@ function Cart() {
           // Update cart if items were adjusted
           if (JSON.stringify(validatedCart) !== JSON.stringify(storedCart)) {
             updateCart(validatedCart);
-            alert("Some items in your cart were adjusted based on current stock availability.");
+            showToast("Some items in your cart were adjusted based on current stock availability.", "warning");
           }
         }
       } catch (err) {
@@ -91,7 +118,7 @@ function Cart() {
     // Only enforce stock limit if stock is actively managed (not undefined/null and > 0)
     if (currentProduct && currentProduct.stock != null && currentProduct.stock > 0) {
       if (item.qty >= currentProduct.stock) {
-        alert(`Sorry, only ${currentProduct.stock} units available in stock.`);
+        showToast(`Sorry, only ${currentProduct.stock} units available in stock.`, "warning");
         return;
       }
     }
@@ -162,6 +189,13 @@ function Cart() {
 
   return (
     <div className="container py-5">
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        show={toast.show}
+        onClose={() => setToast({ ...toast, show: false })}
+      />
+
       <h2 className="mb-4 fw-bold">🛒 My Cart</h2>
 
       {cart.map((item) => (

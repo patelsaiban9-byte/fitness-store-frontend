@@ -1,6 +1,27 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./product.css";
+
+const Toast = ({ message, type, show, onClose }) => {
+  if (!show) return null;
+
+  const alertClass = {
+    success: "alert-success",
+    danger: "alert-danger",
+    warning: "alert-warning",
+  }[type] || "alert-info";
+
+  return (
+    <div
+      className={`alert ${alertClass} alert-dismissible fade show fixed-top mx-auto mt-3`}
+      role="alert"
+      style={{ width: "90%", maxWidth: "520px", zIndex: 1050 }}
+    >
+      {message}
+      <button type="button" className="btn-close" onClick={onClose}></button>
+    </div>
+  );
+};
 
 /*
   Product Component
@@ -13,10 +34,24 @@ import "./product.css";
 function Product() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [toast, setToast] = useState({ show: false, message: "", type: "info" });
+  const toastTimerRef = useRef(null);
 
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const userRole = localStorage.getItem("role");
+
+  const showToast = (message, type = "info") => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+
+    setToast({ show: true, message, type });
+    toastTimerRef.current = setTimeout(() => {
+      setToast({ show: false, message: "", type: "info" });
+    }, 3000);
+  };
 
   /* ===============================
      FETCH PRODUCTS
@@ -36,6 +71,11 @@ function Product() {
 
   useEffect(() => {
     fetchProducts();
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
   }, []);
 
   /* ===============================
@@ -51,6 +91,21 @@ function Product() {
     e.target.src =
       "https://via.placeholder.com/300x200?text=Image+Not+Available";
   };
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredProducts = products.filter((product) => {
+    if (!normalizedQuery) return true;
+
+    const name = (product.name || "").toLowerCase();
+    const description = (product.description || "").toLowerCase();
+    const price = String(product.price ?? "").toLowerCase();
+
+    return (
+      name.includes(normalizedQuery) ||
+      description.includes(normalizedQuery) ||
+      price.includes(normalizedQuery)
+    );
+  });
 
   const renderProductCard = (product) => (
     <div
@@ -109,7 +164,7 @@ function Product() {
                 e.stopPropagation();
 
                 if (product.stock != null && product.stock === 0) {
-                  alert("Sorry, this product is out of stock!");
+                  showToast("Sorry, this product is out of stock!", "warning");
                   return;
                 }
 
@@ -121,7 +176,10 @@ function Product() {
                 if (product.stock != null && product.stock > 0) {
                   const currentQtyInCart = existingItem ? existingItem.qty : 0;
                   if (currentQtyInCart >= product.stock) {
-                    alert(`Sorry, only ${product.stock} units available. You already have ${currentQtyInCart} in your cart.`);
+                    showToast(
+                      `Sorry, only ${product.stock} units available. You already have ${currentQtyInCart} in your cart.`,
+                      "warning"
+                    );
                     return;
                   }
                 }
@@ -140,7 +198,7 @@ function Product() {
 
                 localStorage.setItem("cart", JSON.stringify(cart));
                 window.dispatchEvent(new Event("cartUpdated"));
-                alert(`${product.name} added to cart!`);
+                showToast(`${product.name} added to cart!`, "success");
               }}
               style={{
                 opacity: (product.stock != null && product.stock === 0) ? 0.5 : 1,
@@ -180,12 +238,55 @@ function Product() {
   return (
     <>
       <div className="container py-4">
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          show={toast.show}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+
         <h1 className="text-center mb-5 fw-bold">
           🛍️ Available Products
         </h1>
-        <div className="row g-4 product-grid-row mb-2">
-          {products.map(renderProductCard)}
+
+        <div className="product-search-wrap mb-4">
+          <div className="input-group product-search-group">
+            <span className="input-group-text product-search-icon">🔎</span>
+            <input
+              type="text"
+              className="form-control product-search-input"
+              placeholder="Search products by name, description, or price"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search products"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="btn product-search-clear"
+                onClick={() => setSearchQuery("")}
+                aria-label="Clear search"
+                title="Clear search"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <p className="product-search-meta mb-0 mt-2">
+            Showing {filteredProducts.length} of {products.length} products
+          </p>
         </div>
+
+        {filteredProducts.length === 0 ? (
+          <div className="text-center py-4">
+            <h5 className="mb-1">No matching products found</h5>
+            <p className="text-muted mb-0">Try a different keyword.</p>
+          </div>
+        ) : (
+          <div className="row g-4 product-grid-row mb-2">
+            {filteredProducts.map(renderProductCard)}
+          </div>
+        )}
       </div>
     </>
   );

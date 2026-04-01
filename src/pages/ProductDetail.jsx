@@ -1,6 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
+const Toast = ({ message, type, show, onClose }) => {
+  if (!show) return null;
+
+  const alertClass = {
+    success: "alert-success",
+    danger: "alert-danger",
+    warning: "alert-warning",
+  }[type] || "alert-info";
+
+  return (
+    <div
+      className={`alert ${alertClass} alert-dismissible fade show fixed-top mx-auto mt-3`}
+      role="alert"
+      style={{ width: "90%", maxWidth: "520px", zIndex: 1050 }}
+    >
+      {message}
+      <button type="button" className="btn-close" onClick={onClose}></button>
+    </div>
+  );
+};
+
 function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -11,9 +32,15 @@ function ProductDetail() {
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState({ show: false, message: "", type: "info" });
 
   // ✅ NEW (ONLY ADD)
   const [relatedProducts, setRelatedProducts] = useState([]);
+
+  const showToast = (message, type = "info") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: "", type: "info" }), 3000);
+  };
 
   /* ===============================
      FETCH SINGLE PRODUCT (OLD)
@@ -52,7 +79,7 @@ function ProductDetail() {
   const addToCart = () => {
     // Check stock availability (only if stock is being tracked)
     if (product.stock != null && product.stock === 0) {
-      alert("Sorry, this product is out of stock!");
+      showToast("Sorry, this product is out of stock!", "warning");
       return;
     }
 
@@ -66,7 +93,10 @@ function ProductDetail() {
     if (product.stock != null && product.stock > 0) {
       const currentQtyInCart = existingItem ? existingItem.qty : 0;
       if (currentQtyInCart >= product.stock) {
-        alert(`Sorry, only ${product.stock} units available. You already have ${currentQtyInCart} in your cart.`);
+        showToast(
+          `Sorry, only ${product.stock} units available. You already have ${currentQtyInCart} in your cart.`,
+          "warning"
+        );
         return;
       }
     }
@@ -86,7 +116,7 @@ function ProductDetail() {
     localStorage.setItem("cart", JSON.stringify(cart));
     // Dispatch custom event to notify navbar (same-tab updates)
     window.dispatchEvent(new Event("cartUpdated"));
-    alert("Product added to cart 🛒");
+    showToast("Product added to cart 🛒", "success");
   };
 
   /* ===============================
@@ -95,7 +125,7 @@ function ProductDetail() {
   const buyNow = () => {
     // Check stock availability (only if stock is being tracked)
     if (product.stock != null && product.stock === 0) {
-      alert("Sorry, this product is out of stock!");
+      showToast("Sorry, this product is out of stock!", "warning");
       return;
     }
 
@@ -143,6 +173,13 @@ function ProductDetail() {
 
   return (
     <div className="container py-4">
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        show={toast.show}
+        onClose={() => setToast({ ...toast, show: false })}
+      />
+
       {/* BACK */}
       <button
         className="btn btn-outline-secondary mb-4"
