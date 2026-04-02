@@ -36,7 +36,11 @@ function Home() {
             </div>
             <div className="col-lg-6 hero-icon">
               <div className="icon-display">
-                <span>🏋️</span>
+                <img
+                  src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80"
+                  alt="Fitness product showcase"
+                  className="hero-product-image"
+                />
               </div>
             </div>
           </div>
