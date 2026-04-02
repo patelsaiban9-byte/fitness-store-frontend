@@ -26,6 +26,7 @@ function Admin() {
   const [searchQuery, setSearchQuery] = useState("");
   const [form, setForm] = useState({
     name: "",
+    category: "Supplements",
     description: "",
     price: "",
     image: "",
@@ -113,7 +114,7 @@ function Admin() {
           editingId ? "Product updated successfully!" : "Product added successfully!",
           "success"
         );
-        setForm({ name: "", description: "", price: "", image: "", stock: "", minimumStockThreshold: "" });
+        setForm({ name: "", category: "Supplements", description: "", price: "", image: "", stock: "", minimumStockThreshold: "" });
         setEditingId(null);
         fetchProducts();
       } else {
@@ -154,6 +155,7 @@ function Admin() {
   const handleEdit = (product) => {
     setForm({
       name: product.name,
+      category: product.category || "Supplements",
       description: product.description,
       price: product.price,
       image: product.image,
@@ -182,6 +184,7 @@ function Admin() {
     const query = searchQuery.toLowerCase();
     return (
       product.name.toLowerCase().includes(query) ||
+      (product.category || "").toLowerCase().includes(query) ||
       product.description.toLowerCase().includes(query) ||
       product.price.toString().includes(query)
     );
@@ -253,6 +256,26 @@ function Admin() {
                 required
                 autoComplete="off"
               />
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="category" className="form-label">
+                Category
+              </label>
+              <select
+                id="category"
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+                className="form-select"
+                required
+              >
+                <option value="Supplements">Supplements</option>
+                <option value="Fitness Gear">Fitness Gear</option>
+                <option value="Training Guides">Training Guides</option>
+                <option value="Energy Boosters">Energy Boosters</option>
+                <option value="General">General</option>
+              </select>
             </div>
 
             <div className="mb-3">
@@ -348,6 +371,7 @@ function Admin() {
                   setEditingId(null);
                   setForm({
                     name: "",
+                    category: "Supplements",
                     description: "",
                     price: "",
                     image: "",
@@ -377,7 +401,7 @@ function Admin() {
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Search products by name, description, or price..."
+                  placeholder="Search products by name, category, description, or price..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   autoComplete="off"
@@ -407,6 +431,7 @@ function Admin() {
           <thead className="table-light">
             <tr className="text-center">
               <th>Name</th>
+              <th>Category</th>
               <th>Description</th>
               <th>Price</th>
               <th>Stock Status</th>
@@ -417,7 +442,7 @@ function Admin() {
           <tbody>
             {filteredProducts.length === 0 ? (
               <tr>
-                <td colSpan="6" className="text-center py-4">
+                <td colSpan="7" className="text-center py-4">
                   <div className="text-muted">
                     {searchQuery
                       ? `No products found matching "${searchQuery}"`
@@ -429,6 +454,7 @@ function Admin() {
               filteredProducts.map((p) => (
               <tr key={p._id} className="text-center">
                 <td>{p.name}</td>
+                <td>{p.category || "General"}</td>
                 <td>{p.description}</td>
                 <td>₹{p.price}</td>
                 <td>

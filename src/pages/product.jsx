@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "./product.css";
 
 const Toast = ({ message, type, show, onClose }) => {
@@ -39,8 +39,10 @@ function Product() {
   const toastTimerRef = useRef(null);
 
   const navigate = useNavigate();
+  const { category } = useParams();
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const userRole = localStorage.getItem("role");
+  const selectedCategory = decodeURIComponent(category || "");
 
   const showToast = (message, type = "info") => {
     if (toastTimerRef.current) {
@@ -59,7 +61,11 @@ function Product() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/api/products`);
+      const endpoint = selectedCategory
+        ? `${API_URL}/api/products/category/${encodeURIComponent(selectedCategory)}`
+        : `${API_URL}/api/products`;
+
+      const res = await fetch(endpoint);
       const data = await res.json();
       setProducts(data);
     } catch (err) {
@@ -76,7 +82,7 @@ function Product() {
         clearTimeout(toastTimerRef.current);
       }
     };
-  }, []);
+  }, [selectedCategory]);
 
   /* ===============================
      IMAGE URL HANDLING
@@ -97,11 +103,13 @@ function Product() {
     if (!normalizedQuery) return true;
 
     const name = (product.name || "").toLowerCase();
+    const categoryName = (product.category || "").toLowerCase();
     const description = (product.description || "").toLowerCase();
     const price = String(product.price ?? "").toLowerCase();
 
     return (
       name.includes(normalizedQuery) ||
+      categoryName.includes(normalizedQuery) ||
       description.includes(normalizedQuery) ||
       price.includes(normalizedQuery)
     );
@@ -130,6 +138,10 @@ function Product() {
 
         <div className="card-body d-flex flex-column product-body">
           <h5 className="fw-bold product-title">{product.name}</h5>
+
+          <p className="mb-2">
+            <span className="badge bg-info text-dark">{product.category || "General"}</span>
+          </p>
 
           <p className="text-muted flex-grow-1 product-desc">
             {product.description || "No description available"}
@@ -246,7 +258,7 @@ function Product() {
         />
 
         <h1 className="text-center mb-5 fw-bold">
-          🛍️ Available Products
+          🛍️ {selectedCategory ? `${selectedCategory} Products` : "Available Products"}
         </h1>
 
         <div className="product-search-wrap mb-4">
@@ -274,6 +286,7 @@ function Product() {
           </div>
           <p className="product-search-meta mb-0 mt-2">
             Showing {filteredProducts.length} of {products.length} products
+            {selectedCategory ? ` in ${selectedCategory}` : ""}
           </p>
         </div>
 

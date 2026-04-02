@@ -105,17 +105,21 @@ function Home() {
           
           <div className="row g-4 mt-4">
             {[
-              { icon: '💊', title: 'Protein Supplements', desc: 'Premium whey & plant-based options' },
-              { icon: '🏃', title: 'Fitness Gear', desc: 'Latest workout equipment & accessories' },
-              { icon: '📖', title: 'Training Guides', desc: 'Expert-created workout programs' },
-              { icon: '⚡', title: 'Energy Boosters', desc: 'Pre-workout and recovery products' }
+              { icon: '💊', title: 'Protein Supplements', category: 'Supplements', desc: 'Premium whey & plant-based options' },
+              { icon: '🏃', title: 'Fitness Gear', category: 'Fitness Gear', desc: 'Latest workout equipment & accessories' },
+              { icon: '📖', title: 'Training Guides', category: 'Training Guides', desc: 'Expert-created workout programs' },
+              { icon: '⚡', title: 'Energy Boosters', category: 'Energy Boosters', desc: 'Pre-workout and recovery products' }
             ].map((item, idx) => (
               <div key={idx} className="col-lg-3 col-md-6">
-                <div className="trending-card">
+                <button
+                  type="button"
+                  className="trending-card w-100 text-start border-0"
+                  onClick={() => navigate(`/products/category/${encodeURIComponent(item.category)}`)}
+                >
                   <div className="trending-icon">{item.icon}</div>
                   <h4 className="trending-title">{item.title}</h4>
                   <p className="trending-desc">{item.desc}</p>
-                </div>
+                </button>
               </div>
             ))}
           </div>
