@@ -1,176 +1,316 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./home.css";
 
 function Home() {
   const navigate = useNavigate();
+  const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+  const heroSlides = useMemo(
+    () => [
+      {
+        tag: "Built for Performance",
+        title: "Build Your Perfect Body",
+        description:
+          "Top quality gym equipment, supplements, and daily essentials to support every phase of your fitness journey.",
+        image:
+          "https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?auto=format&fit=crop&w=900&q=80",
+      },
+      {
+        tag: "Strength Collection",
+        title: "Train Harder Every Day",
+        description:
+          "Upgrade your setup with durable gear and performance-focused products trusted by fitness enthusiasts.",
+        image:
+          "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=900&q=80",
+      },
+      {
+        tag: "Recovery and Nutrition",
+        title: "Recover Faster Stay Consistent",
+        description:
+          "Shop nutrition and recovery essentials that help you stay energized, recover better, and hit your goals.",
+        image:
+          "https://images.unsplash.com/photo-1579758629938-03607ccdbaba?auto=format&fit=crop&w=900&q=80",
+      },
+    ],
+    []
+  );
+
+  const categoryItems = useMemo(() => {
+    const categories = [
+      ...new Set(
+        allProducts
+          .map((item) => (item?.category || "").trim())
+          .filter(Boolean)
+      ),
+    ].slice(0, 6);
+
+    return categories.map((category) => {
+      const badge = category
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((word) => word[0]?.toUpperCase() || "")
+        .join("");
+
+      return {
+        title: category,
+        category,
+        badge: badge || "CT",
+      };
+    });
+  }, [allProducts]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/products`);
+        const data = await res.json();
+
+        if (Array.isArray(data)) {
+          setAllProducts(data);
+          setProducts(data.slice(0, 5));
+        }
+      } catch {
+        setAllProducts([]);
+        setProducts([]);
+      }
+    };
+
+    fetchProducts();
+  }, [API_URL]);
+
+  useEffect(() => {
+    const slideTimer = window.setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+
+    return () => {
+      window.clearInterval(slideTimer);
+    };
+  }, [heroSlides.length]);
+
+  const getImageUrl = (img) => {
+    if (!img) return "https://via.placeholder.com/320x220?text=FitStore+Item";
+    if (img.startsWith("http")) return img;
+    return `${API_URL}/${img.replace(/^\/+/, "")}`;
+  };
+
+  const addToCart = (product) => {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const existingItem = cart.find((item) => item._id === product._id);
+
+    if (existingItem) {
+      existingItem.qty += 1;
+    } else {
+      cart.push({
+        _id: product._id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        qty: 1,
+      });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    window.dispatchEvent(new Event("cartUpdated"));
+  };
+
+  const currentSlide = heroSlides[activeSlide];
 
   return (
     <div className="home-page">
-      
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-overlay"></div>
-        <div className="container hero-content">
-          <div className="row align-items-center">
-            <div className="col-lg-6 hero-text">
-              <h1 className="hero-title">Fuel Your Success</h1>
-              <p className="hero-subtitle">Transform Your Body, Transform Your Life</p>
-              <p className="hero-description">
-                Unlock your full potential with our premium range of supplements, gear, and expert-approved essentials. Your fitness journey starts here.
-              </p>
-              <div className="hero-buttons">
-                <button 
-                  onClick={() => navigate("/products")}
-                  className="btn btn-light btn-lg"
-                >
-                  Explore Products
-                </button>
-                <button 
-                  onClick={() => navigate("/about")}
-                  className="btn btn-outline-light btn-lg"
-                >
-                  Learn More
-                </button>
-              </div>
-            </div>
-            <div className="col-lg-6 hero-icon">
-              <div className="icon-display">
-                <img
-                  src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80"
-                  alt="Fitness product showcase"
-                  className="hero-product-image"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <section className="fit-hero">
+        <div className="fit-hero-shapes" aria-hidden="true"></div>
 
-      {/* Features Section */}
-      <section className="features-section">
-        <div className="container">
-          <h2 className="section-title">Why Choose Us</h2>
-          <p className="section-subtitle">Commitment to quality, speed, and exceptional support</p>
-          
-          <div className="row g-4 mt-4">
-            
-            {/* Feature 1 */}
-            <div className="col-lg-4 col-md-6">
-              <div className="feature-card">
-                <div className="feature-icon quality-icon">
-                  <span>✅</span>
-                </div>
-                <h3 className="feature-title">Premium Quality</h3>
-                <p className="feature-text">
-                  Lab-tested and certified supplements with durable, high-quality equipment
-                </p>
-              </div>
-            </div>
+        <div className="fit-hero-content" key={activeSlide}>
+          <div className="fit-hero-left">
+            <span className="fit-hero-tag">{currentSlide.tag}</span>
+            <h1>{currentSlide.title}</h1>
+            <p>{currentSlide.description}</p>
 
-            {/* Feature 2 */}
-            <div className="col-lg-4 col-md-6">
-              <div className="feature-card">
-                <div className="feature-icon delivery-icon">
-                  <span>🚀</span>
-                </div>
-                <h3 className="feature-title">Fast Delivery</h3>
-                <p className="feature-text">
-                  Quick shipping across the nation so you never miss a workout
-                </p>
-              </div>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="col-lg-4 col-md-6">
-              <div className="feature-card">
-                <div className="feature-icon support-icon">
-                  <span>🤝</span>
-                </div>
-                <h3 className="feature-title">Expert Support</h3>
-                <p className="feature-text">
-                  Dedicated team ready to assist with product advice and training tips
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Trending Products Preview */}
-      <section className="trending-section">
-        <div className="container">
-          <h2 className="section-title">Trending Now</h2>
-          <p className="section-subtitle">Check out what's popular with our community</p>
-          
-          <div className="row g-4 mt-4">
-            {[
-              { icon: '💊', title: 'Protein Supplements', category: 'Supplements', desc: 'Premium whey & plant-based options' },
-              { icon: '🏃', title: 'Fitness Gear', category: 'Fitness Gear', desc: 'Latest workout equipment & accessories' },
-              { icon: '📖', title: 'Training Guides', category: 'Training Guides', desc: 'Expert-created workout programs' },
-              { icon: '⚡', title: 'Energy Boosters', category: 'Energy Boosters', desc: 'Pre-workout and recovery products' }
-            ].map((item, idx) => (
-              <div key={idx} className="col-lg-3 col-md-6">
-                <button
-                  type="button"
-                  className="trending-card w-100 text-start border-0"
-                  onClick={() => navigate(`/products/category/${encodeURIComponent(item.category)}`)}
-                >
-                  <div className="trending-icon">{item.icon}</div>
-                  <h4 className="trending-title">{item.title}</h4>
-                  <p className="trending-desc">{item.desc}</p>
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="stats-section">
-        <div className="container">
-          <div className="row g-4">
-            {[
-              { stat: '10K+', label: 'Happy Customers' },
-              { stat: '500+', label: 'Premium Products' },
-              { stat: '50+', label: 'Expert Trainers' },
-              { stat: '24/7', label: 'Customer Support' }
-            ].map((item, idx) => (
-              <div key={idx} className="col-lg-3 col-md-6">
-                <div className="stat-card">
-                  <div className="stat-number">{item.stat}</div>
-                  <div className="stat-label">{item.label}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="cta-banner">
-        <div className="container">
-          <div className="cta-content">
-            <h2 className="cta-title">Ready to Transform?</h2>
-            <p className="cta-subtitle">Join thousands of fitness enthusiasts on their journey to success</p>
-            <div className="cta-buttons">
-              <button 
+            <div className="fit-hero-actions">
+              <button
+                type="button"
+                className="fit-primary-btn"
                 onClick={() => navigate("/products")}
-                className="btn btn-light btn-lg"
               >
-                Start Shopping
+                Shop Now
               </button>
-              <button 
-                onClick={() => navigate("/register")}
-                className="btn btn-outline-light btn-lg"
+              <button
+                type="button"
+                className="fit-secondary-btn"
+                onClick={() => navigate("/about")}
               >
-                Create Account
+                Learn More
               </button>
+            </div>
+
+            <div className="fit-hero-proof">
+              <div className="fit-avatar-stack" aria-hidden="true">
+                <span>A</span>
+                <span>R</span>
+                <span>K</span>
+              </div>
+              <small>10K+ happy customers</small>
+            </div>
+          </div>
+
+          <div className="fit-hero-right" aria-hidden="true">
+            <div className="fit-image-ring">
+              <img
+                src={currentSlide.image}
+                alt={currentSlide.title}
+              />
             </div>
           </div>
         </div>
+
+        <div className="fit-slider-dots" aria-label="Hero slides">
+          {heroSlides.map((slide, index) => (
+            <button
+              key={slide.title}
+              type="button"
+              className={index === activeSlide ? "active" : ""}
+              aria-label={`Go to slide ${index + 1}`}
+              onClick={() => setActiveSlide(index)}
+            ></button>
+          ))}
+        </div>
       </section>
 
+      <section className="fit-section">
+        <div className="fit-section-head">
+          <h2>Shop by Category</h2>
+          <button
+            type="button"
+            className="fit-link-btn"
+            onClick={() => navigate("/products")}
+          >
+            View all categories
+          </button>
+        </div>
+
+        <div className="fit-category-grid">
+          {categoryItems.map((item) => (
+            <button
+              key={item.title}
+              type="button"
+              className="fit-category-card"
+              onClick={() =>
+                navigate(`/products/category/${encodeURIComponent(item.category)}`)
+              }
+            >
+              <span className="fit-category-badge">{item.badge}</span>
+              <span>{item.title}</span>
+            </button>
+          ))}
+
+          {categoryItems.length === 0 && (
+            <div className="fit-empty-state">
+              <p>Categories will appear here once products are available.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="fit-section">
+        <div className="fit-section-head">
+          <h2>Featured Products</h2>
+          <button
+            type="button"
+            className="fit-link-btn"
+            onClick={() => navigate("/products")}
+          >
+            View all products
+          </button>
+        </div>
+
+        <div className="fit-product-grid">
+          {products.map((product) => {
+            const mrp = Math.round(Number(product.price || 0) * 1.2);
+
+            return (
+              <article
+                key={product._id}
+                className="fit-product-card"
+                onClick={() => navigate(`/product/${product._id}`)}
+              >
+                <div className="fit-product-image-wrap">
+                  <img
+                    src={getImageUrl(product.image)}
+                    alt={product.name}
+                    className="fit-product-image"
+                  />
+                </div>
+
+                <div className="fit-product-content">
+                  <h3>{product.name}</h3>
+                  <p className="fit-rating">4.7 (120)</p>
+                  <div className="fit-price-row">
+                    <strong>Rs {product.price}</strong>
+                    <span>Rs {mrp}</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="fit-cart-btn"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      addToCart(product);
+                    }}
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+
+          {products.length === 0 && (
+            <div className="fit-empty-state">
+              <p>Products will appear here once inventory is loaded.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="fit-service-strip">
+        {[
+          {
+            title: "Free Shipping",
+            subtitle: "On orders over Rs 999",
+            code: "FS",
+          },
+          {
+            title: "Secure Payment",
+            subtitle: "100 percent protected checkout",
+            code: "SP",
+          },
+          {
+            title: "Easy Returns",
+            subtitle: "30 day return window",
+            code: "ER",
+          },
+          {
+            title: "24/7 Support",
+            subtitle: "Our team is here to help",
+            code: "CS",
+          },
+        ].map((item) => (
+          <div key={item.title} className="fit-service-card">
+            <span>{item.code}</span>
+            <div>
+              <h4>{item.title}</h4>
+              <p>{item.subtitle}</p>
+            </div>
+          </div>
+        ))}
+      </section>
     </div>
   );
 }
