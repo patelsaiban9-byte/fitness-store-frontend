@@ -33,6 +33,8 @@ const Toast = ({ message, type, show, onClose }) => {
 
 function Product() {
   const [products, setProducts] = useState([]);
+  const [wishlistIds, setWishlistIds] = useState(new Set());
+  const [wishlistPendingIds, setWishlistPendingIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [toast, setToast] = useState({ show: false, message: "", type: "info" });
@@ -42,6 +44,8 @@ function Product() {
   const { category } = useParams();
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const userRole = localStorage.getItem("role");
+  const isUser = userRole === "user";
+  const token = localStorage.getItem("token") || "";
   const selectedCategory = decodeURIComponent(category || "");
 
   const showToast = (message, type = "info") => {
@@ -75,8 +79,141 @@ function Product() {
     }
   };
 
+  const fetchWishlistIds = async () => {
+    if (!isUser || !token) {
+      setWishlistIds(new Set());
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/wishlist/my`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        return;
+      }
+
+      const data = await res.json();
+      const ids = new Set(
+        (Array.isArray(data) ? data : [])
+          .map((item) => item?.productId?._id)
+          .filter(Boolean)
+      );
+
+      setWishlistIds(ids);
+      window.dispatchEvent(
+        new CustomEvent("wishlistUpdated", {
+          detail: { count: ids.size },
+        })
+      );
+    } catch (err) {
+      console.error("Error fetching wishlist:", err);
+    }
+  };
+
+  const updateWishlistState = (productId, action) => {
+    setWishlistIds((prev) => {
+      const updated = new Set(prev);
+
+      if (action === "add") {
+        updated.add(productId);
+      } else {
+        updated.delete(productId);
+      }
+
+      window.dispatchEvent(
+        new CustomEvent("wishlistUpdated", {
+          detail: { count: updated.size },
+        })
+      );
+
+      return updated;
+    });
+  };
+
+  const toggleWishlist = async (product) => {
+    if (!token || !isUser) {
+      navigate("/login", { state: { from: "/products" } });
+      return;
+    }
+
+    const productId = product._id;
+    const isAlreadyInWishlist = wishlistIds.has(productId);
+
+    if (wishlistPendingIds.has(productId)) {
+      return;
+    }
+
+    setWishlistPendingIds((prev) => {
+      const next = new Set(prev);
+      next.add(productId);
+      return next;
+    });
+
+    // Optimistic UI: immediately reflect add/remove action in card heart state.
+    updateWishlistState(productId, isAlreadyInWishlist ? "remove" : "add");
+
+    try {
+      const res = isAlreadyInWishlist
+        ? await fetch(`${API_URL}/api/wishlist/remove/${productId}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+        : await fetch(`${API_URL}/api/wishlist/add`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ productId }),
+          });
+
+      if (res.ok) {
+        showToast(
+          isAlreadyInWishlist
+            ? `${product.name} removed from wishlist`
+            : `${product.name} added to wishlist`,
+          "success"
+        );
+        return;
+      }
+
+      if (!isAlreadyInWishlist && res.status === 409) {
+        showToast("Already in wishlist", "warning");
+        return;
+      }
+
+      if (isAlreadyInWishlist && res.status === 404) {
+        showToast("Item already removed from wishlist", "info");
+        return;
+      }
+
+      // Roll back optimistic change for real failures.
+      updateWishlistState(productId, isAlreadyInWishlist ? "add" : "remove");
+
+      const err = await res.json().catch(() => ({}));
+      showToast(err?.message || "Failed to update wishlist", "danger");
+    } catch (err) {
+      console.error("Wishlist toggle error:", err);
+      updateWishlistState(productId, isAlreadyInWishlist ? "add" : "remove");
+      showToast("Failed to update wishlist", "danger");
+    } finally {
+      setWishlistPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(productId);
+        return next;
+      });
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
+    fetchWishlistIds();
     return () => {
       if (toastTimerRef.current) {
         clearTimeout(toastTimerRef.current);
@@ -169,56 +306,75 @@ function Product() {
           )}
 
           {userRole !== "admin" && (
-            <button
-              className="btn btn-success mt-2 w-100 product-btn"
-              disabled={product.stock != null && product.stock === 0}
-              onClick={(e) => {
-                e.stopPropagation();
+            <>
+              <button
+                className="btn btn-success mt-2 w-100 product-btn"
+                disabled={product.stock != null && product.stock === 0}
+                onClick={(e) => {
+                  e.stopPropagation();
 
-                if (product.stock != null && product.stock === 0) {
-                  showToast("Sorry, this product is out of stock!", "warning");
-                  return;
-                }
-
-                const cart = JSON.parse(localStorage.getItem("cart")) || [];
-                const existingItem = cart.find(
-                  (item) => item._id === product._id
-                );
-
-                if (product.stock != null && product.stock > 0) {
-                  const currentQtyInCart = existingItem ? existingItem.qty : 0;
-                  if (currentQtyInCart >= product.stock) {
-                    showToast(
-                      `Sorry, only ${product.stock} units available. You already have ${currentQtyInCart} in your cart.`,
-                      "warning"
-                    );
+                  if (product.stock != null && product.stock === 0) {
+                    showToast("Sorry, this product is out of stock!", "warning");
                     return;
                   }
-                }
 
-                if (existingItem) {
-                  existingItem.qty += 1;
-                } else {
-                  cart.push({
-                    _id: product._id,
-                    name: product.name,
-                    price: product.price,
-                    image: product.image,
-                    qty: 1,
-                  });
-                }
+                  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+                  const existingItem = cart.find(
+                    (item) => item._id === product._id
+                  );
 
-                localStorage.setItem("cart", JSON.stringify(cart));
-                window.dispatchEvent(new Event("cartUpdated"));
-                showToast(`${product.name} added to cart!`, "success");
-              }}
-              style={{
-                opacity: (product.stock != null && product.stock === 0) ? 0.5 : 1,
-                cursor: (product.stock != null && product.stock === 0) ? "not-allowed" : "pointer",
-              }}
-            >
-              {(product.stock != null && product.stock === 0) ? "Out of Stock" : "🛒 Add to Cart"}
-            </button>
+                  if (product.stock != null && product.stock > 0) {
+                    const currentQtyInCart = existingItem ? existingItem.qty : 0;
+                    if (currentQtyInCart >= product.stock) {
+                      showToast(
+                        `Sorry, only ${product.stock} units available. You already have ${currentQtyInCart} in your cart.`,
+                        "warning"
+                      );
+                      return;
+                    }
+                  }
+
+                  if (existingItem) {
+                    existingItem.qty += 1;
+                  } else {
+                    cart.push({
+                      _id: product._id,
+                      name: product.name,
+                      price: product.price,
+                      image: product.image,
+                      qty: 1,
+                    });
+                  }
+
+                  localStorage.setItem("cart", JSON.stringify(cart));
+                  window.dispatchEvent(new Event("cartUpdated"));
+                  showToast(`${product.name} added to cart!`, "success");
+                }}
+                style={{
+                  opacity: (product.stock != null && product.stock === 0) ? 0.5 : 1,
+                  cursor: (product.stock != null && product.stock === 0) ? "not-allowed" : "pointer",
+                }}
+              >
+                {(product.stock != null && product.stock === 0) ? "Out of Stock" : "🛒 Add to Cart"}
+              </button>
+
+              {isUser && (
+                <button
+                  className={`btn mt-2 w-100 ${wishlistIds.has(product._id) ? "btn-outline-danger" : "btn-outline-dark"}`}
+                  disabled={wishlistPendingIds.has(product._id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleWishlist(product);
+                  }}
+                >
+                  {wishlistPendingIds.has(product._id)
+                    ? "Updating..."
+                    : wishlistIds.has(product._id)
+                      ? "❤️ Remove from Wishlist"
+                      : "🤍 Add to Wishlist"}
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -22,6 +22,7 @@ import OrderForm from "./pages/orderform";
 import About from "./pages/about";
 import ProductDetail from "./pages/ProductDetail";
 import Feedback from "./pages/Feedback";
+import Wishlist from "./pages/Wishlist";
 
 
 // Admin pages
@@ -263,6 +264,15 @@ function App() {
             element={
               <UserRoute isLoggedIn={isLoggedIn} userRole={userRole}>
                 <Feedback />
+              </UserRoute>
+            }
+          />
+
+          <Route
+            path="/wishlist"
+            element={
+              <UserRoute isLoggedIn={isLoggedIn} userRole={userRole}>
+                <Wishlist />
               </UserRoute>
             }
           />

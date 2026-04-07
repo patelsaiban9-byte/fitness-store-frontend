@@ -11,6 +11,7 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
 
   // ✅ Cart count state
   const [cartCount, setCartCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
   const [pendingReturnCount, setPendingReturnCount] = useState(0);
 
   /* ===============================
@@ -39,6 +40,57 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
       window.removeEventListener("cartUpdated", updateCartCount);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isUser) {
+      setWishlistCount(0);
+      return;
+    }
+
+    const fetchWishlistCount = async () => {
+      try {
+        const token = localStorage.getItem("token") || "";
+        if (!token) {
+          setWishlistCount(0);
+          return;
+        }
+
+        const res = await fetch(`${API_URL}/api/wishlist/count`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          setWishlistCount(0);
+          return;
+        }
+
+        const data = await res.json();
+        setWishlistCount(Number(data?.count) || 0);
+      } catch {
+        setWishlistCount(0);
+      }
+    };
+
+    const handleWishlistUpdated = (event) => {
+      const value = Number(event?.detail?.count);
+      if (!Number.isNaN(value) && value >= 0) {
+        setWishlistCount(value);
+      } else {
+        fetchWishlistCount();
+      }
+    };
+
+    fetchWishlistCount();
+    window.addEventListener("wishlistUpdated", handleWishlistUpdated);
+    window.addEventListener("storage", fetchWishlistCount);
+
+    return () => {
+      window.removeEventListener("wishlistUpdated", handleWishlistUpdated);
+      window.removeEventListener("storage", fetchWishlistCount);
+    };
+  }, [API_URL, isUser]);
 
   useEffect(() => {
     if (!isAdmin || !isLoggedIn) {
@@ -180,6 +232,18 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                       {cartCount}
                     </span>
                   )}
+                </Link>
+              </li>
+            )}
+
+            {isUser && (
+              <li className="nav-item position-relative">
+                <Link
+                  className="nav-link text-white fw-semibold mx-1"
+                  to="/wishlist"
+                  onClick={() => setIsOpen(false)}
+                >
+                  ❤️ Wishlist ({wishlistCount})
                 </Link>
               </li>
             )}

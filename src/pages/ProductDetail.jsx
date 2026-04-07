@@ -29,6 +29,7 @@ function ProductDetail() {
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const userRole = localStorage.getItem("role");
   const isLoggedIn = Boolean(localStorage.getItem("token"));
+  const token = localStorage.getItem("token") || "";
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -147,6 +148,52 @@ function ProductDetail() {
     }
 
     navigate("/buynow");
+  };
+
+  const addToWishlist = async () => {
+    if (!isLoggedIn) {
+      navigate("/login", { state: { from: `/product/${id}` } });
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/wishlist/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId: product._id }),
+      });
+
+      if (res.status === 409) {
+        showToast("Already in wishlist", "warning");
+        return;
+      }
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showToast(err?.message || "Failed to add to wishlist", "danger");
+        return;
+      }
+
+      const countRes = await fetch(`${API_URL}/api/wishlist/count`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const countData = countRes.ok ? await countRes.json() : { count: null };
+
+      window.dispatchEvent(
+        new CustomEvent("wishlistUpdated", {
+          detail: { count: Number(countData?.count) || undefined },
+        })
+      );
+      showToast("Added to wishlist", "success");
+    } catch (error) {
+      console.error("Add wishlist error:", error);
+      showToast("Failed to add to wishlist", "danger");
+    }
   };
 
   /* ===============================
@@ -271,6 +318,12 @@ function ProductDetail() {
                 {(product.stock != null && product.stock === 0) ? "Out of Stock" : "🛒 Buy Now"}
               </button>
             </div>
+          )}
+
+          {userRole === "user" && (
+            <button className="btn btn-outline-danger w-100 mb-4" onClick={addToWishlist}>
+              ❤️ Add to Wishlist
+            </button>
           )}
         </div>
       </div>
