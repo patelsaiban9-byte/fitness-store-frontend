@@ -93,6 +93,14 @@ function Wishlist() {
 
   const totalItems = useMemo(() => items.length, [items]);
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate("/products");
+  };
+
   const removeFromWishlist = async (productId, options = {}) => {
     try {
       const token = localStorage.getItem("token") || "";
@@ -191,6 +199,12 @@ function Wishlist() {
         show={toast.show}
         onClose={() => setToast((prev) => ({ ...prev, show: false }))}
       />
+
+      <div className="mb-3">
+        <button type="button" className="btn btn-outline-secondary" onClick={handleBack}>
+          ← Back
+        </button>
+      </div>
 
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="fw-bold mb-0">❤️ My Wishlist</h2>
