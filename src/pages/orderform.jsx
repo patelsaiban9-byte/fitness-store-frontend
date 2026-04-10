@@ -91,6 +91,20 @@ function OrderForm() {
     0
   );
 
+  const loadRazorpayScript = () =>
+    new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+
   /* ===============================
      PLACE ORDER (FINAL FIX ✅)
      =============================== */
@@ -119,30 +133,133 @@ function OrderForm() {
       })),
       totalAmount,
 
-      // ✅ ENUM-SAFE & FINAL
       paymentMethod: paymentMethod === "COD" ? "COD" : "UPI",
       paymentStatus: paymentMethod === "COD" ? "PENDING" : "PAID",
     };
 
     try {
       setSubmitting(true);
-      const res = await fetch(`${API_URL}/api/orders/cart`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      let orderPlaced = false;
 
-      const data = await res.json();
+      if (paymentMethod === "COD") {
+        const res = await fetch(`${API_URL}/api/orders/cart`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
 
-      if (!res.ok) {
-        // Show specific error messages from backend
-        if (data.error === "Insufficient stock" && data.details) {
-          const errorMsg = `Stock unavailable: ${data.details.join(" ")}`;
-          setMessage({ type: "danger", text: errorMsg });
-        } else {
-          setMessage({ type: "danger", text: data.error || "Failed to place order." });
+        const data = await res.json();
+
+        if (!res.ok) {
+          if (data.error === "Insufficient stock" && data.details) {
+            const errorMsg = `Stock unavailable: ${data.details.join(" ")}`;
+            setMessage({ type: "danger", text: errorMsg });
+          } else {
+            setMessage({ type: "danger", text: data.error || "Failed to place order." });
+          }
+          return;
         }
-        return;
+
+        orderPlaced = true;
+      } else {
+        const scriptReady = await loadRazorpayScript();
+        if (!scriptReady) {
+          setMessage({ type: "danger", text: "Unable to load Razorpay. Please try again." });
+          return;
+        }
+
+        const keyRes = await fetch(`${API_URL}/api/orders/payment/key`);
+        const keyData = await keyRes.json();
+        if (!keyRes.ok) {
+          setMessage({ type: "danger", text: keyData.error || "Razorpay key not available." });
+          return;
+        }
+
+        const createRes = await fetch(`${API_URL}/api/orders/payment/create-order`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: totalAmount,
+            receipt: `receipt_${Date.now()}`,
+          }),
+        });
+
+        const createData = await createRes.json();
+        if (!createRes.ok) {
+          setMessage({ type: "danger", text: createData.error || "Unable to start payment." });
+          return;
+        }
+
+        orderPlaced = await new Promise((resolve) => {
+          const options = {
+            key: keyData.key,
+            amount: createData.amount,
+            currency: createData.currency,
+            name: "Fitness Store",
+            description: "Order Payment",
+            order_id: createData.id,
+            prefill: {
+              name: formData.name,
+              email: formData.email,
+              contact: formData.phone,
+            },
+            notes: {
+              address: formData.address,
+            },
+            theme: {
+              color: "#16a34a",
+            },
+            handler: async function (response) {
+              try {
+                const verifyRes = await fetch(`${API_URL}/api/orders/payment/verify`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    ...payload,
+                    paymentMethod: "UPI",
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                  }),
+                });
+
+                const verifyData = await verifyRes.json();
+                if (!verifyRes.ok) {
+                  if (verifyData.error === "Insufficient stock" && verifyData.details) {
+                    setMessage({ type: "danger", text: `Stock unavailable: ${verifyData.details.join(" ")}` });
+                  } else {
+                    setMessage({ type: "danger", text: verifyData.error || "Payment verified but order failed." });
+                  }
+                  resolve(false);
+                  return;
+                }
+
+                resolve(true);
+              } catch (err) {
+                console.error("Verify payment error:", err);
+                setMessage({ type: "danger", text: "Payment verification failed." });
+                resolve(false);
+              }
+            },
+            modal: {
+              ondismiss: function () {
+                setMessage({ type: "warning", text: "Payment was cancelled." });
+                resolve(false);
+              },
+            },
+          };
+
+          const rzp = new window.Razorpay(options);
+          rzp.on("payment.failed", function () {
+            setMessage({ type: "danger", text: "Payment failed. Please try again." });
+            resolve(false);
+          });
+          rzp.open();
+        });
+
+        if (!orderPlaced) {
+          return;
+        }
       }
 
       setMessage({ type: "success", text: "Order placed successfully." });
@@ -306,7 +423,7 @@ function OrderForm() {
                   checked={paymentMethod === "ONLINE"}
                   onChange={(e) => setPaymentMethod(e.target.value)}
                 />{" "}
-                Online Payment (Demo)
+                Online Payment (Razorpay)
               </label>
             </div>
           </div>
