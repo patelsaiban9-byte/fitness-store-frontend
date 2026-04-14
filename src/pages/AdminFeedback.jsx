@@ -32,6 +32,8 @@ function AdminFeedback() {
   };
 
   useEffect(() => {
+    localStorage.setItem("adminFeedbackLastSeenAt", String(Date.now()));
+    window.dispatchEvent(new Event("feedbackUpdated"));
     fetchFeedback();
   }, []);
 

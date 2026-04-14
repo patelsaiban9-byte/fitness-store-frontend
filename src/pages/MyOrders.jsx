@@ -76,6 +76,10 @@ function MyOrders() {
       return;
     }
 
+    const seenKey = `myOrdersLastSeenAt_${userId}`;
+    localStorage.setItem(seenKey, String(Date.now()));
+    window.dispatchEvent(new Event("ordersUpdated"));
+
     const fetchMyReturns = async () => {
       try {
         const res = await fetch(
@@ -202,6 +206,7 @@ function MyOrders() {
 
       alert("Order cancelled successfully");
       await fetchMyOrders();
+      window.dispatchEvent(new Event("ordersUpdated"));
     } catch (err) {
       console.error("❌ Cancel order error:", err);
       alert("Failed to cancel order");

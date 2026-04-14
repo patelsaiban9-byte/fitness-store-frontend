@@ -21,6 +21,8 @@ function AdminOrders() {
   };
 
   useEffect(() => {
+    localStorage.setItem("adminOrdersLastSeenAt", String(Date.now()));
+    window.dispatchEvent(new Event("ordersUpdated"));
     fetchOrders();
   }, []);
 

@@ -12,6 +12,9 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
   // ✅ Cart count state
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
+  const [myOrdersCount, setMyOrdersCount] = useState(0);
+  const [adminOrdersCount, setAdminOrdersCount] = useState(0);
+  const [adminFeedbackCount, setAdminFeedbackCount] = useState(0);
   const [pendingReturnCount, setPendingReturnCount] = useState(0);
 
   /* ===============================
@@ -93,6 +96,170 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
   }, [API_URL, isUser]);
 
   useEffect(() => {
+    if (!isUser || !isLoggedIn) {
+      setMyOrdersCount(0);
+      return;
+    }
+
+    const fetchMyOrdersCount = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+          setMyOrdersCount(0);
+          return;
+        }
+
+        const seenKey = `myOrdersLastSeenAt_${userId}`;
+        let lastSeenAt = Number(localStorage.getItem(seenKey));
+
+        if (!Number.isFinite(lastSeenAt)) {
+          lastSeenAt = Date.now();
+          localStorage.setItem(seenKey, String(lastSeenAt));
+        }
+
+        const res = await fetch(`${API_URL}/api/orders/my/user/${userId}`);
+        if (!res.ok) {
+          setMyOrdersCount(0);
+          return;
+        }
+
+        const data = await res.json();
+        const newOrdersCount = Array.isArray(data)
+          ? data.filter((order) => {
+              const createdAtMs = new Date(order?.createdAt).getTime();
+              return Number.isFinite(createdAtMs) && createdAtMs > lastSeenAt;
+            }).length
+          : 0;
+
+        setMyOrdersCount(newOrdersCount);
+      } catch {
+        setMyOrdersCount(0);
+      }
+    };
+
+    fetchMyOrdersCount();
+
+    const intervalId = window.setInterval(fetchMyOrdersCount, 60000);
+    window.addEventListener("ordersUpdated", fetchMyOrdersCount);
+    window.addEventListener("storage", fetchMyOrdersCount);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("ordersUpdated", fetchMyOrdersCount);
+      window.removeEventListener("storage", fetchMyOrdersCount);
+    };
+  }, [API_URL, isLoggedIn, isUser]);
+
+  useEffect(() => {
+    if (!isAdmin || !isLoggedIn) {
+      setAdminOrdersCount(0);
+      return;
+    }
+
+    const fetchAdminOrdersCount = async () => {
+      try {
+        const seenKey = "adminOrdersLastSeenAt";
+        let lastSeenAt = Number(localStorage.getItem(seenKey));
+
+        if (!Number.isFinite(lastSeenAt)) {
+          lastSeenAt = Date.now();
+          localStorage.setItem(seenKey, String(lastSeenAt));
+        }
+
+        const res = await fetch(`${API_URL}/api/orders`);
+        if (!res.ok) {
+          setAdminOrdersCount(0);
+          return;
+        }
+
+        const data = await res.json();
+        const newOrdersCount = Array.isArray(data)
+          ? data.filter((order) => {
+              const createdAtMs = new Date(order?.createdAt).getTime();
+              return Number.isFinite(createdAtMs) && createdAtMs > lastSeenAt;
+            }).length
+          : 0;
+
+        setAdminOrdersCount(newOrdersCount);
+      } catch {
+        setAdminOrdersCount(0);
+      }
+    };
+
+    fetchAdminOrdersCount();
+
+    const intervalId = window.setInterval(fetchAdminOrdersCount, 60000);
+    window.addEventListener("ordersUpdated", fetchAdminOrdersCount);
+    window.addEventListener("storage", fetchAdminOrdersCount);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("ordersUpdated", fetchAdminOrdersCount);
+      window.removeEventListener("storage", fetchAdminOrdersCount);
+    };
+  }, [API_URL, isAdmin, isLoggedIn]);
+
+  useEffect(() => {
+    if (!isAdmin || !isLoggedIn) {
+      setAdminFeedbackCount(0);
+      return;
+    }
+
+    const fetchAdminFeedbackCount = async () => {
+      try {
+        const seenKey = "adminFeedbackLastSeenAt";
+        let lastSeenAt = Number(localStorage.getItem(seenKey));
+
+        if (!Number.isFinite(lastSeenAt)) {
+          lastSeenAt = Date.now();
+          localStorage.setItem(seenKey, String(lastSeenAt));
+        }
+
+        const token = localStorage.getItem("token") || "";
+        if (!token) {
+          setAdminFeedbackCount(0);
+          return;
+        }
+
+        const res = await fetch(`${API_URL}/api/feedback/admin/all`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          setAdminFeedbackCount(0);
+          return;
+        }
+
+        const data = await res.json();
+        const newFeedbackCount = Array.isArray(data)
+          ? data.filter((item) => {
+              const createdAtMs = new Date(item?.createdAt).getTime();
+              return Number.isFinite(createdAtMs) && createdAtMs > lastSeenAt;
+            }).length
+          : 0;
+
+        setAdminFeedbackCount(newFeedbackCount);
+      } catch {
+        setAdminFeedbackCount(0);
+      }
+    };
+
+    fetchAdminFeedbackCount();
+
+    const intervalId = window.setInterval(fetchAdminFeedbackCount, 60000);
+    window.addEventListener("feedbackUpdated", fetchAdminFeedbackCount);
+    window.addEventListener("storage", fetchAdminFeedbackCount);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("feedbackUpdated", fetchAdminFeedbackCount);
+      window.removeEventListener("storage", fetchAdminFeedbackCount);
+    };
+  }, [API_URL, isAdmin, isLoggedIn]);
+
+  useEffect(() => {
     if (!isAdmin || !isLoggedIn) {
       setPendingReturnCount(0);
       return;
@@ -147,6 +314,9 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
     // 🛒 Keep cart data - only clear on order placement
     setIsLoggedIn(false);
     setUserRole(null);
+    setMyOrdersCount(0);
+    setAdminOrdersCount(0);
+    setAdminFeedbackCount(0);
     setPendingReturnCount(0);
     navigate(isAdmin ? "/admin/login" : "/login");
     setIsOpen(false);
@@ -250,13 +420,21 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
 
             {/* USER LINKS */}
             {isUser && (
-              <li className="nav-item">
+              <li className="nav-item position-relative">
                 <Link
                   className="nav-link text-white fw-semibold mx-1"
                   to="/my-orders"
                   onClick={() => setIsOpen(false)}
                 >
                   My Orders
+                  {myOrdersCount > 0 && (
+                    <span
+                      className="badge bg-warning text-dark ms-1"
+                      style={{ fontSize: "0.7rem" }}
+                    >
+                      {myOrdersCount}
+                    </span>
+                  )}
                 </Link>
               </li>
             )}
@@ -299,6 +477,24 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                 <li className="nav-item">
                   <Link
                     className="nav-link text-warning fw-bolder mx-1"
+                    to="/admin/orders"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Orders
+                    {adminOrdersCount > 0 && (
+                      <span
+                        className="badge bg-danger text-white ms-1"
+                        style={{ fontSize: "0.7rem" }}
+                      >
+                        {adminOrdersCount}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+
+                <li className="nav-item">
+                  <Link
+                    className="nav-link text-warning fw-bolder mx-1"
                     to="/admin/reports"
                     onClick={() => setIsOpen(false)}
                   >
@@ -331,6 +527,14 @@ function Navbar({ isLoggedIn, userRole, setIsLoggedIn, setUserRole }) {
                     onClick={() => setIsOpen(false)}
                   >
                     Feedback
+                    {adminFeedbackCount > 0 && (
+                      <span
+                        className="badge bg-danger text-white ms-1"
+                        style={{ fontSize: "0.7rem" }}
+                      >
+                        {adminFeedbackCount}
+                      </span>
+                    )}
                   </Link>
                 </li>
               </>

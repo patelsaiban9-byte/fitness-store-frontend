@@ -277,6 +277,9 @@ function OrderForm() {
         window.dispatchEvent(new Event("cartUpdated"));
       }
 
+      // Notify navbar/user pages that order data changed
+      window.dispatchEvent(new Event("ordersUpdated"));
+
       setTimeout(() => {
         navigate("/feedback");
       }, 1200);

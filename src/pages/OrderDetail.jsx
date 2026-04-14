@@ -1,12 +1,41 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
+const Toast = ({ message, type, show, onClose }) => {
+  if (!show) return null;
+
+  const alertClass = {
+    success: "alert-success",
+    danger: "alert-danger",
+    warning: "alert-warning",
+  }[type] || "alert-info";
+
+  return (
+    <div
+      className={`alert ${alertClass} alert-dismissible fade show fixed-top mx-auto mt-3`}
+      role="alert"
+      style={{ width: "90%", maxWidth: "560px", zIndex: 1050 }}
+    >
+      {message}
+      <button type="button" className="btn-close" onClick={onClose}></button>
+    </div>
+  );
+};
+
 function OrderDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState({ show: false, message: "", type: "info" });
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+  const showToast = (message, type = "info") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: "", type: "info" });
+    }, 3000);
+  };
 
   /* ===============================
      STATUS TRANSITION VALIDATION
@@ -60,11 +89,11 @@ function OrderDetail() {
       await fetch(`${API_URL}/api/orders/${id}`, {
         method: "DELETE",
       });
-      alert("Order deleted");
+      showToast("Order deleted", "success");
       navigate("/adminorder");
     } catch (err) {
       console.error("Delete error:", err);
-      alert("Failed to delete order");
+      showToast("Failed to delete order", "danger");
     }
   };
 
@@ -81,18 +110,18 @@ function OrderDetail() {
 
       if (!res.ok) {
         const error = await res.json();
-        alert(`Failed: ${error.error || error.message}`);
+        showToast(`Failed: ${error.error || error.message}`, "danger");
         return;
       }
 
-      alert("✅ Payment status updated");
+      showToast("Payment status updated", "success");
       // Refresh order data
       const refreshRes = await fetch(`${API_URL}/api/orders/${id}`);
       const updatedOrder = await refreshRes.json();
       setOrder(updatedOrder);
     } catch (err) {
       console.error("Payment update error:", err);
-      alert("Error updating payment");
+      showToast("Error updating payment", "danger");
     }
   };
 
@@ -104,7 +133,7 @@ function OrderDetail() {
     
     if (!canUpdateStatus(currentStatus, status)) {
       const allowed = getAllowedNextStates(currentStatus);
-      alert(`❌ Cannot change from ${currentStatus} to ${status}.\nAllowed: ${allowed.join(", ") || "None"}`);
+      showToast(`Cannot change from ${currentStatus} to ${status}. Allowed: ${allowed.join(", ") || "None"}`, "warning");
       return;
     }
 
@@ -117,18 +146,18 @@ function OrderDetail() {
 
       if (!res.ok) {
         const error = await res.json();
-        alert(`Invalid: ${error.error}`);
+        showToast(`Invalid: ${error.error}`, "danger");
         return;
       }
 
-      alert("✅ Order status updated");
+      showToast("Order status updated", "success");
       // Refresh order data
       const refreshRes = await fetch(`${API_URL}/api/orders/${id}`);
       const updatedOrder = await refreshRes.json();
       setOrder(updatedOrder);
     } catch (err) {
       console.error("Status update error:", err);
-      alert("Error updating order status");
+      showToast("Error updating order status", "danger");
     }
   };
 
@@ -166,6 +195,13 @@ function OrderDetail() {
      =============================== */
   return (
     <div className="container-fluid py-5" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        show={toast.show}
+        onClose={() => setToast({ ...toast, show: false })}
+      />
+
       <div className="container">
         {/* HEADER */}
         <div className="row mb-4">
