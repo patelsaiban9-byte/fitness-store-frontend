@@ -104,11 +104,6 @@ function Product() {
       );
 
       setWishlistIds(ids);
-      window.dispatchEvent(
-        new CustomEvent("wishlistUpdated", {
-          detail: { count: ids.size },
-        })
-      );
     } catch (err) {
       console.error("Error fetching wishlist:", err);
     }
@@ -123,12 +118,6 @@ function Product() {
       } else {
         updated.delete(productId);
       }
-
-      window.dispatchEvent(
-        new CustomEvent("wishlistUpdated", {
-          detail: { count: updated.size },
-        })
-      );
 
       return updated;
     });
@@ -220,6 +209,18 @@ function Product() {
       }
     };
   }, [selectedCategory]);
+
+  useEffect(() => {
+    if (!isUser) {
+      return;
+    }
+
+    window.dispatchEvent(
+      new CustomEvent("wishlistUpdated", {
+        detail: { count: wishlistIds.size },
+      })
+    );
+  }, [isUser, wishlistIds]);
 
   /* ===============================
      IMAGE URL HANDLING
