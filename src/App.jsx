@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 
 // Components
 import Navbar from "./components/navbar";
+import Footer from "./components/Footer";
 
 // Pages
 import Login from "./pages/login";
@@ -97,10 +98,12 @@ function Layout({
   setUserRole,
 }) {
   const location = useLocation();
-  const hideNavbar = ["/login", "/admin/login", "/register", "/forgot-password"].includes(location.pathname);
+  const authPaths = ["/login", "/admin/login", "/register", "/forgot-password"];
+  const hideNavbar = authPaths.includes(location.pathname);
+  const hideFooter = authPaths.includes(location.pathname);
 
   return (
-    <>
+    <div className="d-flex flex-column min-vh-100">
       {!hideNavbar && (
         <Navbar
           isLoggedIn={isLoggedIn}
@@ -109,8 +112,9 @@ function Layout({
           setUserRole={setUserRole}
         />
       )}
-      <div className="container mt-4">{children}</div>
-    </>
+      <main className="container mt-4 flex-grow-1">{children}</main>
+      {!hideFooter && <Footer />}
+    </div>
   );
 }
 
