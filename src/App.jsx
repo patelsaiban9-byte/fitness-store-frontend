@@ -113,7 +113,7 @@ function Layout({
         />
       )}
       <main className="container mt-4 flex-grow-1">{children}</main>
-      {!hideFooter && <Footer />}
+      {!hideFooter && <Footer isLoggedIn={isLoggedIn} userRole={userRole} />}
     </div>
   );
 }
