@@ -39,6 +39,8 @@ function ForgotPassword() {
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -219,13 +221,21 @@ function ForgotPassword() {
                     <div className="input-wrapper">
                       <span className="input-icon">🔒</span>
                       <input
-                        type="password"
+                        type={showNewPassword ? "text" : "password"}
                         className="form-input"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Minimum 6 characters"
                         required
                       />
+                      <button
+                        type="button"
+                        className="password-toggle-btn"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        aria-label="Toggle password visibility"
+                      >
+                        {showNewPassword ? "👁️" : "👁️‍🗨️"}
+                      </button>
                     </div>
                   </div>
 
@@ -234,13 +244,21 @@ function ForgotPassword() {
                     <div className="input-wrapper">
                       <span className="input-icon">🔒</span>
                       <input
-                        type="password"
+                        type={showConfirmPassword ? "text" : "password"}
                         className="form-input"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Re-enter new password"
                         required
                       />
+                      <button
+                        type="button"
+                        className="password-toggle-btn"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        aria-label="Toggle password visibility"
+                      >
+                        {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
+                      </button>
                     </div>
                   </div>
 

@@ -29,6 +29,7 @@ function Register() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -201,7 +202,7 @@ function Register() {
                   <div className="input-wrapper">
                     <span className="input-icon">🔒</span>
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       className="form-input"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -209,6 +210,14 @@ function Register() {
                       autoComplete="new-password"
                       required
                     />
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label="Toggle password visibility"
+                    >
+                      {showPassword ? "👁️" : "👁️‍🗨️"}
+                    </button>
                   </div>
                 </div>
 

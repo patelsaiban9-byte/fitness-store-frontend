@@ -32,6 +32,7 @@ const Toast = ({ message, type, show, onClose }) => {
 function Login({ setIsLoggedIn, setUserRole, mode = "user" }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
@@ -193,13 +194,21 @@ function Login({ setIsLoggedIn, setUserRole, mode = "user" }) {
                   <div className="input-wrapper">
                     <span className="input-icon">🔒</span>
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       className="form-input"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter your password"
                       required
                     />
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label="Toggle password visibility"
+                    >
+                      {showPassword ? "👁️" : "👁️‍🗨️"}
+                    </button>
                   </div>
                 </div>
 
