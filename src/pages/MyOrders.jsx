@@ -1,6 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const Toast = ({ message, type, show, onClose }) => {
+  if (!show) return null;
+
+  const alertClass = {
+    success: "alert-success",
+    danger: "alert-danger",
+    warning: "alert-warning",
+  }[type] || "alert-info";
+
+  return (
+    <div
+      className={`alert ${alertClass} alert-dismissible fade show fixed-top mx-auto mt-3`}
+      role="alert"
+      style={{ width: "90%", maxWidth: "560px", zIndex: 1050 }}
+    >
+      {message}
+      <button type="button" className="btn-close" onClick={onClose}></button>
+    </div>
+  );
+};
+
 function MyOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,10 +32,22 @@ function MyOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [returnReason, setReturnReason] = useState("");
   const [submittingReturn, setSubmittingReturn] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("info");
+  const [showToast, setShowToast] = useState(false);
   const navigate = useNavigate();
 
   const API_URL =
     import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+  const displayToast = (message, type = "info") => {
+    setToastMessage(message);
+    setToastType(type);
+    setShowToast(true);
+    setTimeout(() => {
+      setShowToast(false);
+    }, 3000);
+  };
 
   const getImageUrl = (img) => {
     if (!img) return null;
@@ -100,7 +133,7 @@ function MyOrders() {
   // Handle return request submission
   const handleReturnRequest = async () => {
     if (!returnReason.trim()) {
-      alert("Please provide a reason for return");
+      displayToast("Please provide a reason for return", "warning");
       return;
     }
 
@@ -121,7 +154,7 @@ function MyOrders() {
       const data = await res.json();
 
       if (res.ok) {
-        alert("Return request submitted successfully!");
+        displayToast("Return request submitted successfully!", "success");
         setShowReturnModal(false);
         setReturnReason("");
         setSelectedOrder(null);
@@ -133,11 +166,11 @@ function MyOrders() {
         const returnsData = await returnsRes.json();
         setReturns(Array.isArray(returnsData) ? returnsData : []);
       } else {
-        alert(data.error || "Failed to submit return request");
+        displayToast(data.error || "Failed to submit return request", "danger");
       }
     } catch (err) {
       console.error("❌ Return request error:", err);
-      alert("Failed to submit return request");
+      displayToast("Failed to submit return request", "danger");
     } finally {
       setSubmittingReturn(false);
     }
@@ -200,16 +233,16 @@ function MyOrders() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.error || "Failed to cancel order");
+        displayToast(data.error || "Failed to cancel order", "danger");
         return;
       }
 
-      alert("Order cancelled successfully");
+      displayToast("Order cancelled successfully", "success");
       await fetchMyOrders();
       window.dispatchEvent(new Event("ordersUpdated"));
     } catch (err) {
       console.error("❌ Cancel order error:", err);
-      alert("Failed to cancel order");
+      displayToast("Failed to cancel order", "danger");
     } finally {
       setCancelling(null);
     }
@@ -599,6 +632,14 @@ function MyOrders() {
           </div>
         </div>
       )}
+
+      {/* TOAST NOTIFICATION */}
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        show={showToast}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 }
